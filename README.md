@@ -26,3 +26,4 @@
    #百度网盘:http://pan.baidu.com/s/1eRy0inK<br>
    #官方网站:http://www.bmpj.net<br>
    #QQ:504547114
+   #QQ群：54256083
