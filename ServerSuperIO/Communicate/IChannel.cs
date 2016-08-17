@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using ServerSuperIO.Protocol;
 using ServerSuperIO.Server;
 
 namespace ServerSuperIO.Communicate
@@ -32,6 +34,13 @@ namespace ServerSuperIO.Communicate
         /// </summary>
         /// <returns></returns>
         byte[] Read();
+
+        /// <summary>
+        /// 读IO，带过滤器
+        /// </summary>
+        /// <param name="receiveFilter"></param>
+        /// <returns></returns>
+        IList<byte[]> Read(IReceiveFilter receiveFilter);
 
         /// <summary>
         /// 写IO

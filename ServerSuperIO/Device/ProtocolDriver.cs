@@ -4,14 +4,14 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using ServerSuperIO.Base;
-using ServerSuperIO.CommandCache;
+using ServerSuperIO.DataCache;
 using ServerSuperIO.Protocol;
 
 namespace ServerSuperIO.Device
 {
     public abstract class ProtocolDriver:IProtocolDriver
     {
-        private Manager<string,IProtocolCommand> _Commands = null; 
+        private Manager<string,IProtocolCommand> _Commands = null;
 
         /// <summary>
         /// 构造函数
@@ -19,6 +19,7 @@ namespace ServerSuperIO.Device
         protected ProtocolDriver()
         {
             _Commands = new Manager<string, IProtocolCommand>();
+            SendCache=new SendCache();
         }
 
         /// <summary>
@@ -31,15 +32,22 @@ namespace ServerSuperIO.Device
                 _Commands.Clear();
                 _Commands = null;
             }
+
+            if (SendCache != null && SendCache.Count > 0)
+            {
+                SendCache.Clear();
+            }
         }
 
         /// <summary>
         /// 初始化驱动
         /// </summary>
-        public virtual void InitDriver(IRunDevice runDevice)
+        public virtual void InitDriver(IRunDevice runDevice,IReceiveFilter receiveFilter)
         {
+            ReceiveFilter = receiveFilter;
+
             this._Commands.Clear();
-            Assembly asm = runDevice.GetType().Assembly;
+            System.Reflection.Assembly asm = runDevice.GetType().Assembly;
             Type[] types = asm.GetTypes();
             foreach (Type t in types)
             {
@@ -138,24 +146,48 @@ namespace ServerSuperIO.Device
         public abstract int GetAddress(byte[] data);
 
         /// <summary>
-        /// 获得协议头
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public abstract byte[] GetProHead(byte[] data);
-
-        /// <summary>
-        /// 获得协议尾
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public abstract byte[] GetProEnd(byte[] data);
-
-        /// <summary>
         /// 获得校验数据
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
         public abstract byte[] GetCheckData(byte[] data);
+
+        /// <summary>
+        /// 获得ID信息，是该传感器的唯一标识。2016-07-29新增加（wxzz)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public abstract string GetCode(byte[] data);
+
+        /// <summary>
+        /// 获得应该接收的数据长度，如果当前接收的数据小于这个返回值，那么继续接收数据，直到大于等于这个返回长度。
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public abstract int GetPackageLength(byte[] data);
+
+        /// <summary>
+        /// 协议头
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public abstract byte[] GetHead(byte[] data);
+
+        /// <summary>
+        /// 协议尾
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public abstract byte[] GetEnd(byte[] data);
+
+        /// <summary>
+        /// 发送数据缓存
+        /// </summary>
+        public ISendCache SendCache { private set; get; }
+
+        /// <summary>
+        /// 协议过滤器
+        /// </summary>
+        public IReceiveFilter ReceiveFilter { set; get; }
     }
 }

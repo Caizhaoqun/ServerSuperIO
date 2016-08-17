@@ -9,5 +9,5 @@ namespace ServerSuperIO.Service
     /// 服务日志 
     /// </summary>
     /// <param name="log"></param>
-    public delegate void AppServiceLogHandler(string log);
+    public delegate void ServiceLogHandler(string log);
 }

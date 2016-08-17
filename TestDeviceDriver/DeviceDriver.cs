@@ -23,10 +23,21 @@ namespace TestDeviceDriver
 
         public override void Initialize(int devid)
         {
-            this.Protocol.InitDriver(this);
+            this.Protocol.InitDriver(this,new FixedHeadAndEndReceiveFliter(new byte[] {0x55,0xaa},new byte[] {0x0d} ));
+
+            //this.Protocol.InitDriver(this, new FixedLengthReceiveFliter(2));
+
+            //this.Protocol.InitDriver(this, new FixedHeadReceiveFliter(new byte[] { 0x55, 0xaa }));
+
+            //this.Protocol.InitDriver(this, new FixedHeadAndLengthReceiveFliter(new byte[] { 0x55, 0xaa },12));
+
+           // this.Protocol.InitDriver(this, new FixedEndReceiveFliter(new byte[] { 0x0d }));
+
+
+            //this.Protocol.InitDriver(this, null);
 
             //初始化设备参数信息
-            
+
             _devicePara.DeviceID = devid;//设备的ID必须先赋值，因为要查找对应的参数文件。
             if (System.IO.File.Exists(_devicePara.SavePath))
             {
@@ -55,7 +66,8 @@ namespace TestDeviceDriver
 
         public override byte[] GetConstantCommand()
         {
-            return this.Protocol.DriverPackage(0, "61", null);
+            //return this.Protocol.DriverPackage(0, "61", null);
+            return null;
         }
 
         public override void Communicate(ServerSuperIO.Communicate.IRequestInfo info)
@@ -158,7 +170,10 @@ namespace TestDeviceDriver
             get { return _devicePara; }
         }
 
-        public override IProtocolDriver Protocol { get; }
+        public override IProtocolDriver Protocol {
+            get { return _protocol;
+            }
+        }
 
         public override DeviceType DeviceType
         {

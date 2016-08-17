@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ServerSuperIO.DataCache;
 using ServerSuperIO.Device;
 
 namespace ServerSuperIO.Protocol
@@ -11,7 +12,7 @@ namespace ServerSuperIO.Protocol
         /// <summary>
         /// 初始化协议驱动
         /// </summary>
-        void InitDriver(IRunDevice runDevice);
+        void InitDriver(IRunDevice runDevice,IReceiveFilter receiveFilter);
 
         /// <summary>
         /// 获得协议命令
@@ -60,24 +61,48 @@ namespace ServerSuperIO.Protocol
         byte[] GetCommand(byte[] data);
 
         /// <summary>
-        /// 获得该设备的地址
+        /// 获得地址
         /// </summary>
         /// <param name="data">输入接收到的数据</param>
         /// <returns>返回地址</returns>
         int GetAddress(byte[] data);
 
         /// <summary>
+        /// 获得ID信息，是该传感器的唯一标识。2016-07-29新增加（wxzz)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        string GetCode(byte[] data);
+
+        /// <summary>
+        /// 获得应该接收的数据长度，如果当前接收的数据小于这个返回值，那么继续接收数据，直到大于等于这个返回长度。
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        int GetPackageLength(byte[] data);
+
+        /// <summary>
         /// 协议头
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        byte[] GetProHead(byte[] data);
+        byte[] GetHead(byte[] data);
 
         /// <summary>
         /// 协议尾
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        byte[] GetProEnd(byte[] data);
+        byte[] GetEnd(byte[] data);
+
+        /// <summary>
+        /// 命令缓存器，把要发送的命令数据放到这里，框架会自动提取数据进行发送
+        /// </summary>
+        ISendCache SendCache { get; }
+
+        /// <summary>
+        /// 协议过滤器
+        /// </summary>
+        IReceiveFilter ReceiveFilter { set;get; }
     }
 }

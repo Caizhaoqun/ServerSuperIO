@@ -20,10 +20,10 @@ namespace TestDeviceDriver
             Dyn dyn = new Dyn
             {
                 CurDT = DateTime.Now,
-                ProHead = this.ProtocolDriver.GetProHead(data),
+                ProHead = this.ProtocolDriver.GetHead(data),
                 DeviceAddr = this.ProtocolDriver.GetAddress(data),
                 Command = this.ProtocolDriver.GetCommand(data),
-                ProEnd = this.ProtocolDriver.GetProEnd(data)
+                ProEnd = this.ProtocolDriver.GetEnd(data)
             };
 
             //一般下位机是单片的话，接收到数据的高低位需要互换，才能正常解析。

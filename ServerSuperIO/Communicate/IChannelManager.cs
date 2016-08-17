@@ -34,6 +34,22 @@ namespace ServerSuperIO.Communicate
         TValue GetChannel(string ioPara1, CommunicateType comType);
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ioPara1"></param>
+        /// <param name="ioPara2"></param>
+        /// <param name="comType"></param>
+        /// <returns></returns>
+        TValue GetChannel(string ioPara1, int ioPara2, CommunicateType comType);
+
+        /// <summary>
+        /// 获得指定IO类型的通道
+        /// </summary>
+        /// <param name="ioType"></param>
+        /// <returns></returns>
+        ICollection<TValue> GetChannels(CommunicateType ioType);
+
+            /// <summary>
         /// 获得值集合
         /// </summary>
         /// <returns></returns>

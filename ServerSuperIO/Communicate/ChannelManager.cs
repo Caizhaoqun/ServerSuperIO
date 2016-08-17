@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ServerSuperIO.Base;
+using ServerSuperIO.Communicate.COM;
+using ServerSuperIO.Communicate.NET;
 
 namespace ServerSuperIO.Communicate
 {
@@ -76,6 +78,40 @@ namespace ServerSuperIO.Communicate
                 }
             }
             return channel;
+        }
+
+        public IChannel GetChannel(string ioPara1,int ioPara2, CommunicateType comType)
+        {
+            IChannel channel = null;
+            foreach (KeyValuePair<string, IChannel> c in _Channels)
+            {
+                if (c.Value.CommunicationType == comType)
+                {
+                    ISocketSession socketSession = (ISocketSession)c.Value;
+                    if (socketSession.RemoteIP == ioPara1 && socketSession.RemotePort == ioPara2)
+                    {
+                        channel = c.Value;
+                        break;
+                    }
+                    
+                }
+                else if (c.Value.CommunicationType == comType)
+                {
+                    IComSession comSession = (IComSession)c.Value;
+                    if (ComUtils.PortToString(comSession.Port)  == ioPara1 && comSession.Baud == ioPara2)
+                    {
+                        channel = c.Value;
+                        break;
+                    }
+                }
+            }
+            return channel;
+        }
+
+
+        public ICollection<IChannel> GetChannels(CommunicateType ioType)
+        {
+           return GetValues().Where(v => v.CommunicationType == CommunicateType.NET).ToList();
         }
 
         /// <summary>

@@ -20,7 +20,7 @@ namespace ServerSuperIO.Communicate.NET
         /// </summary>
         /// <param name="socketSession"></param>
         /// <param name="data"></param>
-        void Receive(ISocketSession socketSession, byte[] data);
+        void Receive(ISocketSession socketSession, IReceivePackage dataPackage);
 
         ///// <summary>
         ///// 关闭Socket事件

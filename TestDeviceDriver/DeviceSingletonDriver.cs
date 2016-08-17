@@ -25,7 +25,7 @@ namespace TestDeviceDriver
 
         public override void Initialize(int devid)
         {
-            this.Protocol.InitDriver(this);
+            this.Protocol.InitDriver(this, new FixedHeadAndEndReceiveFliter(new byte[] { 0x55, 0xaa }, new byte[] { 0x0d }));
 
             //初始化设备参数信息
             

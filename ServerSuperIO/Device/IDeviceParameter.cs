@@ -8,12 +8,17 @@ namespace ServerSuperIO.Device
     public interface IDeviceParameter : IVirtualDeviceParameter,IXmlPersistence
     {
         /// <summary>
-        /// 设备ID
+        /// 设备ID，这是系统自动生成的。
         /// </summary>
         int DeviceID { get;set;}
 
         /// <summary>
-        /// 设备地址
+        /// 设备编码，手动设置且唯一
+        /// </summary>
+        string DeviceCode { get; set; }
+
+        /// <summary>
+        /// 设备地址，有可能有重复
         /// </summary>
         int DeviceAddr { get;set;}
 

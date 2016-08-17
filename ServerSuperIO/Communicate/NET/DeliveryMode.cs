@@ -12,7 +12,7 @@ namespace ServerSuperIO.Communicate.NET
     {
         [EnumDescription("设备IP分发数据")]
         DeviceIP,
-        [EnumDescription("设备地址分发数据")]
-        DeviceAddress
+        [EnumDescription("设备编码分发数据")]
+        DeviceCode
     }
 }

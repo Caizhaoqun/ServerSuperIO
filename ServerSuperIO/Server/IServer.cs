@@ -14,7 +14,7 @@ using ServerSuperIO.Show;
 
 namespace ServerSuperIO.Server
 {
-    public interface IServer:IDisposable,ILoggerProvider,IConfigProvider
+    public interface IServer:IDisposable,ILoggerProvider,IServerConfigProvider
     {
         #region 函数
         /// <summary>
@@ -63,14 +63,14 @@ namespace ServerSuperIO.Server
         /// 增加服务
         /// </summary>
         /// <param name="service"></param>
-        bool AddAppService(IAppService service);
+        bool AddService(IService service);
 
         /// <summary>
         /// 删除服务
         /// </summary>
         /// <param name="serviceKey"></param>
         /// <returns></returns>
-        bool RemoveAppService(string serviceKey);
+        bool RemoveService(string serviceKey);
 
         /// <summary>
         /// 改变设备的串口信息

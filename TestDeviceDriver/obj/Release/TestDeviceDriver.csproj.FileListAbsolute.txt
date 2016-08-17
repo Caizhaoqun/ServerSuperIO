@@ -7,3 +7,8 @@ E:\工作目录\工作区\平台软件\ServerSuperIO\TestDeviceDriver\obj\Releas
 E:\工作目录\工作区\平台软件\ServerSuperIO\TestDeviceDriver\obj\Release\TestDeviceDriver.pdb
 E:\工作目录\工作区\平台软件\ServerSuperIO\bin\TestDeviceDriver.dll
 E:\工作目录\工作区\平台软件\ServerSuperIO\bin\TestDeviceDriver.pdb
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\bin\TestDeviceDriver.dll
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\bin\TestDeviceDriver.pdb
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\TestDeviceDriver\obj\Release\TestDeviceDriver.csprojResolveAssemblyReference.cache
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\TestDeviceDriver\obj\Release\TestDeviceDriver.dll
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\TestDeviceDriver\obj\Release\TestDeviceDriver.pdb

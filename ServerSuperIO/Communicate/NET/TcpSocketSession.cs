@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -8,6 +9,8 @@ using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using ServerSuperIO.Common;
+using ServerSuperIO.Device;
+using ServerSuperIO.Protocol;
 using ServerSuperIO.Server;
 
 namespace ServerSuperIO.Communicate.NET
@@ -17,7 +20,7 @@ namespace ServerSuperIO.Communicate.NET
         /// <summary>
         /// 无数状态下记数器
         /// </summary>
-        private int _NoneDataCounter = 0;
+        //private int _NoneDataCounter = 0;
 
         /// <summary>
         /// 设置多长时间后检测网络状态
@@ -35,8 +38,8 @@ namespace ServerSuperIO.Communicate.NET
         /// <param name="socket"></param>
         /// <param name="remoteEndPoint"></param>
         /// <param name="proxy"></param>
-        public TcpSocketSession(Socket socket,  IPEndPoint remoteEndPoint,ISocketAsyncEventArgsProxy proxy)
-            : base(socket,remoteEndPoint,proxy)
+        public TcpSocketSession(Socket socket, IPEndPoint remoteEndPoint, ISocketAsyncEventArgsProxy proxy)
+            : base(socket, remoteEndPoint, proxy)
         {
         }
 
@@ -51,7 +54,7 @@ namespace ServerSuperIO.Communicate.NET
                 BitConverter.GetBytes((uint)1).CopyTo(_KeepAliveOptionValues, 0);
                 BitConverter.GetBytes((uint)(2000)).CopyTo(_KeepAliveOptionValues, Marshal.SizeOf(dummy));
 
-                uint keepAlive = this.Server.Config.KeepAlive;
+                uint keepAlive = this.Server.ServerConfig.KeepAlive;
 
                 BitConverter.GetBytes((uint)(keepAlive)).CopyTo(_KeepAliveOptionValues, Marshal.SizeOf(dummy) * 2);
 
@@ -61,51 +64,94 @@ namespace ServerSuperIO.Communicate.NET
                 Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
                 //----------------------------------------------------//
 
-                Client.ReceiveTimeout = Server.Config.NetReceiveTimeout;
-                Client.SendTimeout = Server.Config.NetSendTimeout;
-                Client.ReceiveBufferSize = Server.Config.NetReceiveBufferSize;
-                Client.SendBufferSize = Server.Config.NetSendBufferSize;
+                Client.ReceiveTimeout = Server.ServerConfig.NetReceiveTimeout;
+                Client.SendTimeout = Server.ServerConfig.NetSendTimeout;
+                Client.ReceiveBufferSize = Server.ServerConfig.NetReceiveBufferSize;
+                Client.SendBufferSize = Server.ServerConfig.NetSendBufferSize;
             }
 
             if (SocketAsyncProxy != null)
             {
                 SocketAsyncProxy.Initialize(this);
-                SocketAsyncProxy.SocketReceiveEventArgs.Completed += SocketEventArgs_Completed;
+                SocketAsyncProxy.SocketReceiveEventArgsEx.Completed += SocketEventArgs_Completed;
                 SocketAsyncProxy.SocketSendEventArgs.Completed += SocketEventArgs_Completed;
             }
         }
 
-        /// <summary>
-        /// 读操作
-        /// </summary>
-        /// <returns></returns>
-        public override byte[] Read()
+        ///// <summary>
+        ///// 读操作
+        ///// </summary>
+        ///// <returns></returns>
+        //public override byte[] Read()
+        //{
+        //    IList<byte[]> listBytes = ReadReceiveFilter(null);
+        //    if (listBytes != null)
+        //    {
+        //        return listBytes[0];
+        //    }
+        //    else
+        //    {
+        //        return null;
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 读IO，带过滤器
+        ///// </summary>
+        ///// <param name="receiveFilter"></param>
+        ///// <returns></returns>
+        //public override IList<byte[]> Read(IReceiveFilter receiveFilter)
+        //{
+        //    if (receiveFilter == null)
+        //    {
+        //        throw new NullReferenceException("receiveFilter为空");
+        //    }
+
+        //    return ReadReceiveFilter(receiveFilter);
+        //}
+
+        protected override IList<byte[]> ReceiveDataFilter(IReceiveFilter receiveFilter)
         {
             if (!this.IsDisposed)
             {
-                System.Threading.Thread.Sleep(Server.Config.NetLoopInterval);
+                System.Threading.Thread.Sleep(Server.ServerConfig.NetLoopInterval);
                 if (this.Client.Connected)
                 {
                     if (this.Client.Poll(10, SelectMode.SelectRead))
                     {
                         try
                         {
-                            byte[] buffer = SocketAsyncProxy.SocketReceiveEventArgs.Buffer;
+                            if (SocketAsyncProxy.SocketReceiveEventArgsEx.NextOffset >= SocketAsyncProxy.SocketReceiveEventArgsEx.InitOffset + SocketAsyncProxy.SocketReceiveEventArgsEx.Capacity)
+                            {
+                                SocketAsyncProxy.SocketReceiveEventArgsEx.Reset();
+                            }
+
+                            byte[] buffer = SocketAsyncProxy.SocketReceiveEventArgsEx.ReceiveBuffer;
 
                             #region
-
-                            int num = this.Client.Receive(buffer, SocketAsyncProxy.ReceiveOffset, Client.ReceiveBufferSize, SocketFlags.None);
+                            int num = this.Client.Receive(buffer, SocketAsyncProxy.SocketReceiveEventArgsEx.NextOffset, SocketAsyncProxy.SocketReceiveEventArgsEx.InitOffset + SocketAsyncProxy.SocketReceiveEventArgsEx.Capacity - SocketAsyncProxy.SocketReceiveEventArgsEx.NextOffset, SocketFlags.None);
 
                             if (num <= 0)
                             {
-                                throw new SocketException((int) SocketError.HostDown);
+                                throw new SocketException((int)SocketError.HostDown);
                             }
                             else
                             {
-                                this._NoneDataCounter = 0;
-                                byte[] data = new byte[num];
-                                Buffer.BlockCopy(buffer, SocketAsyncProxy.ReceiveOffset, data, 0, data.Length);
-                                return data;
+                                //this._NoneDataCounter = 0;
+
+                                LastActiveTime = DateTime.Now;
+
+                                SocketAsyncProxy.SocketReceiveEventArgsEx.DataLength += num;
+                                if (receiveFilter == null)
+                                {
+                                    IList<byte[]> listBytes = new List<byte[]>();
+                                    listBytes.Add(SocketAsyncProxy.SocketReceiveEventArgsEx.Get());
+                                    return listBytes;
+                                }
+                                else
+                                {
+                                    return SocketAsyncProxy.SocketReceiveEventArgsEx.Get(receiveFilter);
+                                }
                             }
 
                             #endregion
@@ -113,22 +159,22 @@ namespace ServerSuperIO.Communicate.NET
                         catch (SocketException)
                         {
                             OnCloseSocket();
-                            throw;
+                            throw new SocketException((int)SocketError.HostDown);
                         }
                     }
                     else
                     {
-                        this._NoneDataCounter++;
-                        if (this._NoneDataCounter >= 60)
-                        {
-                            this._NoneDataCounter = 0;
-                            OnCloseSocket();
-                            throw new SocketException((int)SocketError.HostDown);
-                        }
-                        else
-                        {
-                            return new byte[] { };
-                        }
+                        //this._NoneDataCounter++;
+                        //if (this._NoneDataCounter >= 60)
+                        //{
+                        //    this._NoneDataCounter = 0;
+                        OnCloseSocket();
+                        throw new SocketException((int)SocketError.HostDown);
+                        //}
+                        //else
+                        //{
+                        //    return null;
+                        //}
                     }
                 }
                 else
@@ -139,7 +185,7 @@ namespace ServerSuperIO.Communicate.NET
             }
             else
             {
-                return new byte[] { };
+                return null;
             }
         }
 
@@ -163,7 +209,7 @@ namespace ServerSuperIO.Communicate.NET
                         while (num < data.Length)
                         {
                             int remainLength = data.Length - num;
-                            int sendLength = remainLength >= this.Client.SendBufferSize? this.Client.SendBufferSize : remainLength;
+                            int sendLength = remainLength >= this.Client.SendBufferSize ? this.Client.SendBufferSize : remainLength;
 
                             SocketError error;
                             successNum += this.Client.Send(data, num, sendLength, SocketFlags.None, out error);
@@ -173,7 +219,7 @@ namespace ServerSuperIO.Communicate.NET
                             if (successNum <= 0 || error != SocketError.Success)
                             {
                                 OnCloseSocket();
-                                throw new SocketException((int) SocketError.HostDown);
+                                throw new SocketException((int)SocketError.HostDown);
                             }
                         }
 
@@ -203,10 +249,10 @@ namespace ServerSuperIO.Communicate.NET
             {
                 try
                 {
-                    bool willRaiseEvent = this.Client.ReceiveAsync(this.SocketAsyncProxy.SocketReceiveEventArgs);
+                    bool willRaiseEvent = this.Client.ReceiveAsync(this.SocketAsyncProxy.SocketReceiveEventArgsEx);
                     if (!willRaiseEvent)
                     {
-                        ProcessReceive(this.SocketAsyncProxy.SocketReceiveEventArgs);
+                        ProcessReceive(this.SocketAsyncProxy.SocketReceiveEventArgsEx);
                     }
                 }
                 catch (Exception ex)
@@ -219,23 +265,74 @@ namespace ServerSuperIO.Communicate.NET
         private void ProcessReceive(SocketAsyncEventArgs e)
         {
             ISocketSession socketSession = (ISocketSession)e.UserToken;
-            if (socketSession != null && socketSession.Client!=null)
+            if (socketSession != null && socketSession.Client != null)
             {
                 try
                 {
                     if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
                     {
-                        byte[] data = new byte[e.BytesTransferred];
-                        Buffer.BlockCopy(e.Buffer, e.Offset, data, 0, e.BytesTransferred);
-
-                        bool willRaiseEvent =
-                            socketSession.Client.ReceiveAsync(this.SocketAsyncProxy.SocketReceiveEventArgs);
-                        if (!willRaiseEvent)
+                        SocketAsyncEventArgsEx saeaEx = (SocketAsyncEventArgsEx)e;
+                        if (saeaEx.NextOffset >= saeaEx.InitOffset + saeaEx.Capacity)
                         {
-                            ProcessReceive(this.SocketAsyncProxy.SocketReceiveEventArgs);
+                            saeaEx.Reset();
                         }
 
-                        OnSocketReceiveData(data);
+                        saeaEx.DataLength += saeaEx.BytesTransferred;
+
+                        IReceivePackage dataPackage = new ReceivePackage();
+                        dataPackage.RemoteIP = this.RemoteIP;
+                        dataPackage.RemotePort = this.RemotePort;
+
+                        #region 过滤数据
+
+                        if (this.Server.ServerConfig.StartReceiveDataFliter)
+                        {
+                            IRunDevice[] devList = this.Server.DeviceManager.GetDevices(CommunicateType.NET);
+                            if (devList != null && devList.Length > 0)
+                            {
+                                if (this.Server.ServerConfig.ControlMode == ControlMode.Loop
+                                    || this.Server.ServerConfig.ControlMode == ControlMode.Self
+                                    || this.Server.ServerConfig.ControlMode == ControlMode.Parallel)
+                                {
+                                    #region
+                                    byte[] data = new byte[saeaEx.DataLength];
+                                    Buffer.BlockCopy(saeaEx.ReceiveBuffer, saeaEx.InitOffset, data, 0, data.Length);
+                                    IRunDevice dev = null;
+                                    try
+                                    {
+                                        dev = devList.FirstOrDefault(d => d.DeviceParameter.DeviceCode == d.Protocol.GetCode(data));
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        this.Server.Logger.Error(true, ex.Message);
+                                    }
+
+                                    ProcessFliterData(dataPackage, saeaEx, dev);
+
+                                    #endregion
+                                }
+                                else if (this.Server.ServerConfig.ControlMode == ControlMode.Singleton)
+                                {
+                                    ProcessFliterData(dataPackage, saeaEx, devList[0]);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ProcessFliterData(dataPackage, saeaEx, null);
+                        }
+
+                        #endregion
+
+                        saeaEx.SetBuffer(saeaEx.ReceiveBuffer, saeaEx.NextOffset,saeaEx.InitOffset + saeaEx.Capacity - saeaEx.NextOffset);
+
+                        OnSocketReceiveData(dataPackage);
+
+                        bool willRaiseEvent = socketSession.Client.ReceiveAsync(this.SocketAsyncProxy.SocketReceiveEventArgsEx);
+                        if (!willRaiseEvent)
+                        {
+                            ProcessReceive(this.SocketAsyncProxy.SocketReceiveEventArgsEx);
+                        }
                     }
                     else
                     {
@@ -254,6 +351,33 @@ namespace ServerSuperIO.Communicate.NET
             }
         }
 
+        private void ProcessFliterData(IReceivePackage dataPackage, SocketAsyncEventArgsEx saeaEx, IRunDevice dev)
+        {
+            if (dev == null || dev.Protocol == null || dev.Protocol.ReceiveFilter == null)
+            {
+                if (dataPackage.ListBytes == null)
+                {
+                    dataPackage.ListBytes = new List<byte[]>();
+                }
+                byte[] data = saeaEx.Get();
+                if (data.Length > 0)
+                {
+                    LastActiveTime = DateTime.Now;
+                }
+                dataPackage.ListBytes.Add(data);
+            }
+            else
+            {
+                dataPackage.DeviceCode = dev.DeviceParameter.DeviceCode;
+                IList<byte[]> listBytes = saeaEx.Get(dev.Protocol.ReceiveFilter);
+                if (listBytes != null && listBytes.Count > 0)
+                {
+                    LastActiveTime = DateTime.Now;
+                }
+                dataPackage.ListBytes = listBytes;
+            }
+        }
+
         private void ProcessSend(SocketAsyncEventArgs e)
         {
             try
@@ -264,7 +388,7 @@ namespace ServerSuperIO.Communicate.NET
 
                     if (e.BytesTransferred < data.Length)
                     {
-                        e.SetBuffer(data,e.BytesTransferred,data.Length-e.BytesTransferred);
+                        e.SetBuffer(data, e.BytesTransferred, data.Length - e.BytesTransferred);
                         bool willRaiseEvent = this.Client.SendAsync(e);
                         if (!willRaiseEvent)
                         {
@@ -301,7 +425,7 @@ namespace ServerSuperIO.Communicate.NET
                     this.SocketAsyncProxy.SocketSendEventArgs.UserToken = data;
                     this.SocketAsyncProxy.SocketSendEventArgs.SetBuffer(data, 0, data.Length);
                     bool willRaiseEvent = this.Client.SendAsync(this.SocketAsyncProxy.SocketSendEventArgs);
-                   
+
                     if (!willRaiseEvent)
                     {
                         ProcessSend(this.SocketAsyncProxy.SocketSendEventArgs);
@@ -309,7 +433,7 @@ namespace ServerSuperIO.Communicate.NET
                 }
                 catch (Exception ex)
                 {
-                    this.Server.Logger.Error(true,ex.Message);
+                    this.Server.Logger.Error(true, ex.Message);
                 }
             }
         }

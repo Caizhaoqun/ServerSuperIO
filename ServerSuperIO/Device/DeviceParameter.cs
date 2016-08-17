@@ -5,11 +5,12 @@ using System.Text;
 using ServerSuperIO.Common;
 using ServerSuperIO.Communicate.COM;
 using ServerSuperIO.Communicate.NET;
+using ServerSuperIO.Persistence;
 
 namespace ServerSuperIO.Device
 {
     [Serializable]
-    public abstract class DeviceParameter:IDeviceParameter
+    public abstract class DeviceParameter:XmlPersistence,IDeviceParameter
     {
         protected DeviceParameter()
         {
@@ -78,7 +79,7 @@ namespace ServerSuperIO.Device
         /// <summary>
         /// 保存参数的路径
         /// </summary>
-        public string SavePath
+        public override string SavePath
         {
             get
             {
@@ -92,47 +93,8 @@ namespace ServerSuperIO.Device
         }
 
         /// <summary>
-        /// 修复实体
+        /// 设备编码，手动设置且唯一
         /// </summary>
-        /// <returns></returns>
-        public abstract object Repair();
-
-        /// <summary>
-        /// 保存实体
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="t"></param>
-        public void Save<T>(T t)
-        {
-            SerializeUtil.XmlSerialize<T>(this.SavePath, t);
-        }
-
-        /// <summary>
-        /// 加载实体
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T Load<T>()
-        {
-            try
-            {
-                return SerializeUtil.XmlDeserailize<T>(this.SavePath);
-            }
-            catch
-            {
-                return (T)Repair();
-            }
-        }
-
-        /// <summary>
-        /// 删除实体
-        /// </summary>
-        public void Delete()
-        {
-            if (System.IO.File.Exists(this.SavePath))
-            {
-                System.IO.File.Delete(this.SavePath);
-            }
-        }
+        public string DeviceCode { get; set; }
     }
 }

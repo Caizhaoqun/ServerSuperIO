@@ -14,7 +14,7 @@ namespace ServerSuperIO.Communicate.NET
 
         ListenerInfo ListenerInfo { get; }
 
-        bool Start(IConfig config);
+        bool Start(IServerConfig config);
 
         void Stop();
 

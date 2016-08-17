@@ -20,7 +20,7 @@ namespace ServerSuperIO.Communicate.NET
 
         }
 
-        public override bool Start(IConfig config)
+        public override bool Start(IServerConfig config)
         {
             try
             {
@@ -66,7 +66,7 @@ namespace ServerSuperIO.Communicate.NET
                 try
                 {
                     byte[] revData=new byte[e.BytesTransferred];
-                    Buffer.BlockCopy(e.Buffer,e.Offset,revData,0,e.BytesTransferred);
+                    Buffer.BlockCopy(e.Buffer,e.Offset,revData,0,revData.Length);
 
                     OnNewClientAcceptedAsync(_ListenSocket, new object[]{revData,e.RemoteEndPoint});
                 }

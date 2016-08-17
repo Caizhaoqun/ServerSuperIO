@@ -4,11 +4,12 @@ using System.Linq;
 using System.Text;
 using ServerSuperIO.Common;
 using ServerSuperIO.Communicate;
+using ServerSuperIO.Persistence;
 
 namespace ServerSuperIO.Device
 {
     [Serializable]
-    public abstract class DeviceDynamic:IDeviceDynamic
+    public abstract class DeviceDynamic:XmlPersistence,IDeviceDynamic
     {
         protected DeviceDynamic()
         {
@@ -52,7 +53,7 @@ namespace ServerSuperIO.Device
         /// <summary>
         /// 保存路径
         /// </summary>
-        public string SavePath
+        public override string SavePath
         {
             get
             {
@@ -62,50 +63,6 @@ namespace ServerSuperIO.Device
                     System.IO.Directory.CreateDirectory(path);
                 }
                 return String.Format("{0}/{1}.xml", path, this.DeviceID.ToString());
-            }
-        }
-
-        /// <summary>
-        /// 修复实体
-        /// </summary>
-        /// <returns></returns>
-        public abstract object Repair();
-
-        /// <summary>
-        /// 保存实体
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="t"></param>
-        public void Save<T>(T t)
-        {
-            SerializeUtil.XmlSerialize<T>(this.SavePath, t);
-        }
-
-        /// <summary>
-        /// 加载实体
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T Load<T>()
-        {
-            try
-            {
-                return SerializeUtil.XmlDeserailize<T>(this.SavePath);
-            }
-            catch
-            {
-                return (T)Repair();
-            }
-        }
-
-        /// <summary>
-        /// 删除实体
-        /// </summary>
-        public void Delete()
-        {
-            if (System.IO.File.Exists(this.SavePath))
-            {
-                System.IO.File.Delete(this.SavePath);
             }
         }
     }

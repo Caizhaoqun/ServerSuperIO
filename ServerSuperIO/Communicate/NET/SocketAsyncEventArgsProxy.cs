@@ -6,30 +6,27 @@ using System.Text;
 
 namespace ServerSuperIO.Communicate.NET
 {
-    internal class SocketAsyncEventArgsProxy:ISocketAsyncEventArgsProxy
+    public class SocketAsyncEventArgsProxy:ISocketAsyncEventArgsProxy
     {
-        public SocketAsyncEventArgsProxy(SocketAsyncEventArgs saea)
+        public SocketAsyncEventArgsProxy(SocketAsyncEventArgsEx saea)
         {
-            SocketReceiveEventArgs = saea;
-            ReceiveOffset = saea.Offset;
+            SocketReceiveEventArgsEx = saea;
             SocketSendEventArgs=new SocketAsyncEventArgs();
         }
 
-        public SocketAsyncEventArgs SocketReceiveEventArgs { get; set; }
+        public SocketAsyncEventArgsEx SocketReceiveEventArgsEx { get; set; }
 
         public SocketAsyncEventArgs SocketSendEventArgs { get; set; }
 
-        public int ReceiveOffset { get; private set; }
-
         public void Initialize(ISocketSession session)
         {
-            SocketReceiveEventArgs.UserToken = session;
+            SocketReceiveEventArgsEx.UserToken = session;
             SocketSendEventArgs.UserToken = session;
         }
 
         public void Reset()
         {
-            SocketReceiveEventArgs.UserToken = null;
+            SocketReceiveEventArgsEx.UserToken = null;
             SocketSendEventArgs.UserToken = null;
         }
     }

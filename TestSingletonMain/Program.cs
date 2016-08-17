@@ -30,8 +30,9 @@ namespace TestSingletonMain
             dev3.CommunicateType = CommunicateType.NET;
             dev3.Initialize(2);
 
-            Server server = new Server("服务1", new Config()
+            IServer server = new ServerFactory().CreateServer(new ServerConfig()
             {
+                ServerName = "服务1",
                 ControlMode = ControlMode.Singleton
             });
 
@@ -43,9 +44,9 @@ namespace TestSingletonMain
 
             server.AddDevice(dev3);
 
-            Service s = new Service();
-            s.AppServiceLog += s_AppServiceLog;
-            server.AddAppService((IAppService)s);
+            TestService.Service s = new TestService.Service();
+            s.ServiceLog += s_AppServiceLog;
+            server.AddService((IService)s);
 
             Graphics g = new Graphics();
             server.AddGraphicsShow((IGraphicsShow)g);

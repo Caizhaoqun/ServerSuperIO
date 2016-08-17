@@ -7,7 +7,7 @@ using ServerSuperIO.Service;
 
 namespace TestService
 {
-    public class Service:AppService
+    public class Service: ServerSuperIO.Service.Service
     {
         private bool _isDispose = false;
         public override string ThisKey
