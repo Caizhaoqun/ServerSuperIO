@@ -15,6 +15,7 @@ namespace TransFileHost
     {
         static void Main(string[] args)
         {
+            
             ReceiveFileDriver dev = new ReceiveFileDriver();
             dev.DeviceParameter.DeviceName = "设备4";
             dev.DeviceParameter.DeviceAddr = 0;

@@ -25,9 +25,13 @@ namespace ServerSuperIO.Config
             ControlMode=ControlMode.Loop;
             ListenPort = 6699;
             BackLog = 1000;
-            IsCheckSameSocketSession = true;
+            CheckSameSocketSession = true;
             SocketMode=SocketMode.Tcp;
             DeliveryMode=DeliveryMode.DeviceIP;
+            StartReceiveDataFliter = false;
+            ClearSocketSession = true;
+            ClearSocketSessionInterval = 5;
+            ClearSocketSessionTimeOut = 30;
         }
 
         public int ComReadBufferSize { get; set; }
@@ -60,10 +64,18 @@ namespace ServerSuperIO.Config
 
         public int BackLog { get; set; }
 
-        public bool IsCheckSameSocketSession { get; set; }
+        public bool CheckSameSocketSession { get; set; }
 
         public SocketMode SocketMode { get; set; }
 
         public DeliveryMode DeliveryMode { get; set; }
+
+        public bool StartReceiveDataFliter { get; set; }
+
+        public bool ClearSocketSession { get; set; }
+
+        public int ClearSocketSessionInterval { get; set; }
+
+        public int ClearSocketSessionTimeOut { get; set; }
     }
 }

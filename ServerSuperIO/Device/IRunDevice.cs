@@ -42,7 +42,7 @@ namespace ServerSuperIO.Device
         /// </summary>
         /// <param name="io"></param>
         /// <param name="senddata"></param>
-        void Send(IChannel io, byte[] senddata);
+        int Send(IChannel io, byte[] senddata);
 
         /// <summary>
         /// 读取IO数据接口

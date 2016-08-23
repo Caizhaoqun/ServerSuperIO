@@ -105,9 +105,9 @@ namespace ServerSuperIO.Device
         /// </summary>
         /// <param name="io"></param>
         /// <param name="senddata"></param>
-        public virtual void Send(IChannel io, byte[] senddata)
+        public virtual int Send(IChannel io, byte[] senddata)
         {
-            io.Write(senddata);
+            return io.Write(senddata);
         }
 
         /// <summary>

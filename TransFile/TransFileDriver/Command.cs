@@ -18,6 +18,12 @@ namespace TransFileDriver
         {
             get { return "writefile"; }
         }
+
+        public override void ExcuteCommand<T>(T t)
+        {
+            throw new NotImplementedException();
+        }
+
         public override object Analysis(byte[] data, object obj)
         {
             try
@@ -49,7 +55,7 @@ namespace TransFileDriver
             return 0;
         }
 
-        public override byte[] Package(int devaddr, object obj)
+        public override byte[] Package(string code, object obj)
         {
             throw new NotImplementedException();
         }

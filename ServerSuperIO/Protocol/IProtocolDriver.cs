@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using ServerSuperIO.DataCache;
 using ServerSuperIO.Device;
@@ -22,6 +23,14 @@ namespace ServerSuperIO.Protocol
         IProtocolCommand GetProcotolCommand(string cmdName);
 
         /// <summary>
+        /// 驱动命令
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="cmdName"></param>
+        /// <param name="t"></param>
+        void DriverCommand<T>(string cmdName,T t);
+
+        /// <summary>
         /// 驱动解析
         /// </summary>
         /// <param name="cmdName"></param>
@@ -33,11 +42,11 @@ namespace ServerSuperIO.Protocol
         /// <summary>
         /// 驱动打包
         /// </summary>
-        /// <param name="addr"></param>
+        /// <param name="code">编码或地址</param>
         /// <param name="cmdName"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        byte[] DriverPackage(int addr, string cmdName, object obj);
+        byte[] DriverPackage(string code, string cmdName, object obj);
 
         /// <summary>
         /// 数据校验

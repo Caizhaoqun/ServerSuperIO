@@ -15,6 +15,11 @@ namespace TestDeviceDriver
             get { return "61"; }
         }
 
+        public override void ExcuteCommand<T>(T t)
+        {
+            throw new NotImplementedException();
+        }
+
         public override object Analysis(byte[] data, object obj)
         {
             Dyn dyn = new Dyn
@@ -34,13 +39,13 @@ namespace TestDeviceDriver
             return dyn;
         }
 
-        public override byte[] Package(int devaddr, object obj)
+        public override byte[] Package(string code, object obj)
         {
             //发送：0x55 0xaa 0x00 0x61 0x61 0x0d
             byte[] data = new byte[6];
             data[0] = 0x55;
             data[1] = 0xaa;
-            data[2] = (byte)devaddr;
+            data[2] = byte.Parse(code);
             data[3] = 0x61;
             data[4] = this.ProtocolDriver.GetCheckData(data)[0];
             data[5] = 0x0d;

@@ -57,7 +57,7 @@ namespace TestDeviceDriver
 
         public override byte[] GetConstantCommand()
         {
-            return this.Protocol.DriverPackage(0, "61", null);
+            return this.Protocol.DriverPackage("0", "61", null);
         }
 
         public override void Communicate(ServerSuperIO.Communicate.IRequestInfo info)

@@ -24,7 +24,6 @@ namespace TransFileDriver
             }
         }
 
-
         public override bool CheckData(byte[] data)
         {
             byte[] head = Head;

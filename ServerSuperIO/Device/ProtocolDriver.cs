@@ -85,6 +85,21 @@ namespace ServerSuperIO.Device
         }
 
         /// <summary>
+        /// 驱动命令
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="cmdName"></param>
+        /// <param name="t"></param>
+        public void DriverCommand<T>(string cmdName,T t)
+        {
+            IProtocolCommand cmd = GetProcotolCommand(cmdName);
+            if (cmd != null)
+            {
+                cmd.ExcuteCommand<T>(t);
+            }
+        }
+
+        /// <summary>
         /// 解析数据
         /// </summary>
         /// <param name="cmdName"></param>
@@ -107,16 +122,16 @@ namespace ServerSuperIO.Device
         /// <summary>
         /// 打包数据
         /// </summary>
-        /// <param name="addr"></param>
+        /// <param name="code">编码或地址</param>
         /// <param name="cmdName"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public byte[] DriverPackage(int addr, string cmdName, object obj)
+        public byte[] DriverPackage(string code, string cmdName, object obj)
         {
             IProtocolCommand cmd = GetProcotolCommand(cmdName);
             if (cmd != null)
             {
-                return cmd.Package(addr,obj);
+                return cmd.Package(code, obj);
             }
             else
             {

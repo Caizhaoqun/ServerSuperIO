@@ -121,7 +121,7 @@ namespace ServerSuperIO.Server
                     if (dev.CommunicateType == CommunicateType.COM)
                     {
                         #region 串口
-                        string key = Utils.PortToString(dev.DeviceParameter.COM.Port);
+                        string key = ComUtils.PortToString(dev.DeviceParameter.COM.Port);
                         IChannel channel = ChannelManager.GetChannel(key);
                         if (channel == null)
                         {
@@ -217,7 +217,7 @@ namespace ServerSuperIO.Server
 
                             if (comDevices.Length == 0)
                             {
-                                string key = Utils.PortToString(dev.DeviceParameter.COM.Port);
+                                string key = ComUtils.PortToString(dev.DeviceParameter.COM.Port);
                                 IController controller = ControllerManager.GetController(key);
                                 if (controller != null)
                                 {
@@ -310,7 +310,7 @@ namespace ServerSuperIO.Server
 
                         if (oldComDevCount <= 0)//先修改设备的串口参数，该串口没有可用的设备
                         {
-                            string oldKey = Utils.PortToString(oldComPort);
+                            string oldKey = ComUtils.PortToString(oldComPort);
                             IController oldComController = ControllerManager.GetController(oldKey);
                             if (oldComController != null)
                             {
@@ -343,7 +343,7 @@ namespace ServerSuperIO.Server
                         #endregion
 
                         #region 对新串口进行处理
-                        string newKey = Utils.PortToString(newComPort);
+                        string newKey = ComUtils.PortToString(newComPort);
                         //--------------对新串口进行处理----------------//
                         bool newComControllerExist = ControllerManager.ContainController(newKey);
                         if (!newComControllerExist)
@@ -399,7 +399,7 @@ namespace ServerSuperIO.Server
                         #region 波特率
                         if (oldComBaud != newComBaud)
                         {
-                            IComSession comIO = (IComSession)ChannelManager.GetChannel(Utils.PortToString(oldComPort));
+                            IComSession comIO = (IComSession)ChannelManager.GetChannel(ComUtils.PortToString(oldComPort));
                             if (comIO != null)
                             {
                                 success = comIO.Settings(newComBaud);
@@ -524,7 +524,7 @@ namespace ServerSuperIO.Server
 
         private void ComChannel_COMError(IComSession com, int port, int baud, string error)
         {
-            OnChannelChanged(Utils.PortToString(port), CommunicateType.COM, ChannelState.None);
+            OnChannelChanged(ComUtils.PortToString(port), CommunicateType.COM, ChannelState.None);
 
             Logger.Error(true, String.Format("{0}-{1},{2}", port.ToString(), baud.ToString(), error));
         }
@@ -533,7 +533,7 @@ namespace ServerSuperIO.Server
         {
             if (closeSuccess)
             {
-                OnChannelChanged(Utils.PortToString(port), CommunicateType.COM, ChannelState.Close);
+                OnChannelChanged(ComUtils.PortToString(port), CommunicateType.COM, ChannelState.Close);
             }
             OnComClosed(port, baud, closeSuccess);
         }
@@ -542,7 +542,7 @@ namespace ServerSuperIO.Server
         {
             if (openSuccess)
             {
-                OnChannelChanged(Utils.PortToString(port), CommunicateType.COM, ChannelState.Open);
+                OnChannelChanged(ComUtils.PortToString(port), CommunicateType.COM, ChannelState.Open);
             }
 
             OnComOpened(port, baud, openSuccess);
@@ -606,7 +606,7 @@ namespace ServerSuperIO.Server
         {
             if (e == null)
                 return;
-
+            
             if (e.Data == null || e.Data.Length <= 0)
             {
                 Logger.Info(false, e.DeviceName + ",要发送的数据为空");

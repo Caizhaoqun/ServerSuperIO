@@ -88,5 +88,16 @@ namespace ServerSuperIO.Common
         {
             return (int)Convert.ToByte(Convert.ToString(hex, 16));
         }
+
+        /// <summary>
+        /// 转成二进制字符串
+        /// </summary>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static string ByteToBinary(byte b)
+        {
+            return System.Convert.ToString(b, 2).PadLeft(8, '0');
+        }
+        
     }
 }

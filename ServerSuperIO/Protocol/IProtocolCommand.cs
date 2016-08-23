@@ -26,6 +26,13 @@ namespace ServerSuperIO.Protocol
         string Name { get; }
 
         /// <summary>
+        /// 执行命令
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="t"></param>
+        void ExcuteCommand<T>(T t);
+
+        /// <summary>
         /// 解析数据
         /// </summary>
         /// <param name="data"></param>
@@ -36,10 +43,10 @@ namespace ServerSuperIO.Protocol
         /// <summary>
         /// 打包数据
         /// </summary>
-        /// <param name="devaddr"></param>
+        /// <param name="code">编码或地址</param>
         /// <param name="cmd"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        byte[] Package(int devaddr,object obj);
+        byte[] Package(string code,object obj);
     }
 }

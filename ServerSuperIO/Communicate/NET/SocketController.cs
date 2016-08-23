@@ -64,7 +64,14 @@ namespace ServerSuperIO.Communicate.NET
                 int sendNum = 0;
                 lock (socketSession.SyncLock)
                 {
-                    sendNum = socketSession.Write(data);
+                    try
+                    {
+                        sendNum = dev.Send(socketSession, data);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Server.Logger.Info(true, dev.DeviceParameter.DeviceName + ">>"+ex.Message);
+                    }
                 }
 
                 if (sendNum == data.Length && sendNum != 0)

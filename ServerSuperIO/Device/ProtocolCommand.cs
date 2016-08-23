@@ -15,6 +15,14 @@ namespace ServerSuperIO.Device
         /// </summary>
         public abstract string Name { get; }
 
+
+        /// <summary>
+        /// 执行命令
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="t"></param>
+        public abstract void ExcuteCommand<T>(T t);
+
         /// <summary>
         /// 解析数据
         /// </summary>
@@ -26,10 +34,10 @@ namespace ServerSuperIO.Device
         /// <summary>
         /// 打包数据
         /// </summary>
-        /// <param name="devaddr"></param>
+        /// <param name="code">编码或地址</param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public abstract byte[] Package(int devaddr, object obj);
+        public abstract byte[] Package(string code, object obj);
 
         /// <summary>
         /// 安装协议驱动
