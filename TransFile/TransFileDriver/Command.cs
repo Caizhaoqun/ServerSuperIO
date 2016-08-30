@@ -24,7 +24,7 @@ namespace TransFileDriver
             throw new NotImplementedException();
         }
 
-        public override object Analysis(byte[] data, object obj)
+        public override dynamic Analysis<T1,T2>(byte[] data, T1 t1,T2 t2)
         {
             try
             {
@@ -55,7 +55,7 @@ namespace TransFileDriver
             return 0;
         }
 
-        public override byte[] Package(string code, object obj)
+        public override byte[] Package<T1,T2>(string code, T1 t1,T2 t2)
         {
             throw new NotImplementedException();
         }

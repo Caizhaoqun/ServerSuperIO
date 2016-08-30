@@ -164,17 +164,7 @@ namespace ServerSuperIO.Communicate.NET
                     }
                     else
                     {
-                        //this._NoneDataCounter++;
-                        //if (this._NoneDataCounter >= 60)
-                        //{
-                        //    this._NoneDataCounter = 0;
-                        OnCloseSocket();
-                        throw new SocketException((int)SocketError.HostDown);
-                        //}
-                        //else
-                        //{
-                        //    return null;
-                        //}
+                        return null;
                     }
                 }
                 else
@@ -198,9 +188,7 @@ namespace ServerSuperIO.Communicate.NET
         {
             if (!this.IsDisposed)
             {
-                if (this.Client.Connected
-                    &&
-                    this.Client.Poll(10, SelectMode.SelectWrite))
+                if (this.Client.Connected)
                 {
                     try
                     {
@@ -307,7 +295,10 @@ namespace ServerSuperIO.Communicate.NET
                                         this.Server.Logger.Error(true, ex.Message);
                                     }
 
-                                    ProcessFliterData(dataPackage, saeaEx, dev);
+                                    if (dev != null)
+                                    {
+                                        ProcessFliterData(dataPackage, saeaEx, dev);
+                                    }
 
                                     #endregion
                                 }

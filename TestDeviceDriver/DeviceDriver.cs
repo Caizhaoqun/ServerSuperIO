@@ -72,10 +72,9 @@ namespace TestDeviceDriver
 
         public override void Communicate(ServerSuperIO.Communicate.IRequestInfo info)
         {
-            object obj = this.Protocol.DriverAnalysis("61", info.Data, null);
-            if (obj != null)
+            Dyn dyn = this.Protocol.DriverAnalysis<String,String>("61", info.Data, null,null);
+            if (dyn != null)
             {
-                Dyn dyn = (Dyn) obj;
                 _deviceDyn.Dyn = dyn;
             }
 

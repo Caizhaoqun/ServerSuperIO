@@ -108,6 +108,7 @@ namespace TransFileClient
 
                     float percent = ((fs.Length - length)/(float) fs.Length)*100.0f;
                     Console.WriteLine("已传:" + percent.ToString("0.00")  + "%");
+                    System.Threading.Thread.Sleep(5);
                 }
                 watch.Stop();
                 

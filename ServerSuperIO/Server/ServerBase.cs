@@ -5,6 +5,7 @@ using System.Text;
 using ServerSuperIO.Base;
 using ServerSuperIO.Common;
 using ServerSuperIO.Communicate;
+using ServerSuperIO.Communicate.COM;
 using ServerSuperIO.Communicate.NET;
 using ServerSuperIO.Config;
 using ServerSuperIO.Device;
@@ -77,14 +78,228 @@ namespace ServerSuperIO.Server
         /// </summary>
         /// <param name="dev"></param>
         /// <returns>设备ID</returns>
-        public abstract void AddDevice(Device.IRunDevice dev);
+        public void AddDevice(IRunDevice dev)
+        {
+            if (dev == null)
+            {
+                throw new ArgumentNullException("设备驱动", "参数为空");
+            }
 
-        /// <summary>
-        /// 删除设备
-        /// </summary>
-        /// <param name="devid"></param>
-        /// <returns></returns>
-        public abstract void RemoveDevice(int devid);
+            if (dev.DeviceParameter.DeviceID != dev.DeviceDynamic.DeviceID)
+            {
+                throw new NotEqualException("参数和动态数据的设备ID不相等");
+            }
+
+            int devid = -1;
+            if (dev.DeviceParameter.DeviceID == -1 || dev.DeviceDynamic.DeviceID == -1)
+            {
+                devid = this.DeviceManager.BuildDeviceID();
+                dev.DeviceParameter.DeviceID = devid;
+                dev.DeviceDynamic.DeviceID = devid;
+                try
+                {
+                    dev.Initialize(devid);
+                }
+                catch { throw; }
+            }
+
+            if (DeviceManager.ContainDevice(devid))
+            {
+                throw new ArgumentException("已经有相同的设备ID存在");
+            }
+
+            if (ServerConfig.ControlMode == ControlMode.Singleton)
+            {
+                if (dev.CommunicateType == CommunicateType.NET)
+                {
+                    IRunDevice[] netDevices = DeviceManager.GetDevices(CommunicateType.NET);
+
+                    if (netDevices.Length >= 1) //如果是Singleton模式只能有一个网络设备驱动
+                    {
+                        throw new IndexOutOfRangeException("当为Singleton模式时，不能增加多个网络设备驱动");
+                    }
+                }
+            }
+
+            string desc = String.Empty;
+            if (this.DeviceManager.AddDevice(dev.DeviceParameter.DeviceID, dev))
+            {
+                dev.Setup(this);
+
+                this.BindDeviceHandler(dev, dev.DeviceType, true);
+
+                if (dev.DeviceType == DeviceType.Virtual)
+                {
+                    desc = "增加虚拟设备";
+                }
+                else
+                {
+                    IController controller = null;
+                    if (dev.CommunicateType == CommunicateType.COM)
+                    {
+                        #region 串口
+                        string key = ComUtils.PortToString(dev.DeviceParameter.COM.Port);
+                        IChannel channel = ChannelManager.GetChannel(key);
+                        if (channel == null)
+                        {
+                            IComSession comChannel = new ComSession(dev.DeviceParameter.COM.Port, dev.DeviceParameter.COM.Baud);
+                            comChannel.Setup(this);
+                            comChannel.Initialize();
+                            comChannel.COMOpen += ComChannel_COMOpen;
+                            comChannel.COMClose += ComChannel_COMClose;
+                            comChannel.COMError += ComChannel_COMError;
+                            comChannel.Open();
+                            channel = (IChannel)comChannel;
+
+                            ChannelManager.AddChannel(key, channel);
+                        }
+
+                        controller = ControllerManager.GetController(key);
+                        if (controller == null)
+                        {
+                            controller = new ComController((IComSession)channel);
+                            controller.Setup(this);
+                            if (ControllerManager.AddController(controller.Key, controller))
+                            {
+                                controller.StartController();
+                            }
+                        }
+                        else
+                        {
+                            IComController comController = (IComController)controller;
+                            if (comController.ComChannel.GetHashCode() != channel.GetHashCode())
+                            {
+                                comController.ComChannel = (IComSession)channel;
+                            }
+                        }
+
+                        desc = String.Format("增加'{0}'串口设备，串口:{1} 波特率:{2}", dev.DeviceParameter.DeviceName, dev.DeviceParameter.COM.Port.ToString(), dev.DeviceParameter.COM.Baud.ToString());
+                        #endregion
+                    }
+                    else if (dev.CommunicateType == CommunicateType.NET)
+                    {
+                        #region 网络
+                        controller = ControllerManager.GetController(SocketController.ConstantKey);
+                        if (controller == null)
+                        {
+                            controller = new SocketController();
+                            controller.Setup(this);
+                            if (ControllerManager.AddController(controller.Key, controller))
+                            {
+                                controller.StartController();
+                            }
+                        }
+
+                        desc = String.Format("增加'{0}'网络设备，IP地址:{1} 端口:{2}", dev.DeviceParameter.DeviceName, dev.DeviceParameter.NET.RemoteIP, dev.DeviceParameter.NET.RemotePort.ToString());
+                        #endregion
+                    }
+                    else
+                    {
+                        desc = "无法识别设备的通讯类型";
+                    }
+                }
+
+                desc += ",成功";
+                OnAddDeviceCompleted(dev.DeviceParameter.DeviceID, dev.DeviceParameter.DeviceName, true);
+            }
+            else
+            {
+                desc += ",失败";
+                OnAddDeviceCompleted(dev.DeviceParameter.DeviceID, dev.DeviceParameter.DeviceName, false);
+            }
+
+            this.Logger.Info(true, desc);
+        }
+
+        public void RemoveDevice(int devid)
+        {
+            IRunDevice dev = DeviceManager.GetDevice(devid);
+
+            if (dev != null)
+            {
+                string desc = String.Empty;
+                string devname = dev.DeviceParameter.DeviceName;
+                if (DeviceManager.RemoveDevice(dev.DeviceParameter.DeviceID))
+                {
+                    if (dev.DeviceType == DeviceType.Virtual)
+                    {
+                        desc = "删除虚拟设备";
+                    }
+                    else
+                    {
+                        #region
+                        if (dev.CommunicateType == CommunicateType.COM)
+                        {
+                            IRunDevice[] comDevices = DeviceManager.GetDevices(dev.DeviceParameter.COM.Port.ToString(), CommunicateType.COM);
+
+                            if (comDevices.Length == 0)
+                            {
+                                string key = ComUtils.PortToString(dev.DeviceParameter.COM.Port);
+                                IController controller = ControllerManager.GetController(key);
+                                if (controller != null)
+                                {
+                                    controller.IsWorking = false;
+                                    if (ControllerManager.RemoveController(controller.Key))
+                                    {
+                                        controller.StopController();
+                                        controller.Dispose();
+
+                                        IComSession comChannel = (IComSession)((IComController)controller).ComChannel;
+                                        comChannel.Close();
+                                        comChannel.COMOpen -= ComChannel_COMOpen;
+                                        comChannel.COMClose -= ComChannel_COMClose;
+                                        comChannel.COMError -= ComChannel_COMError;
+
+                                        if (ChannelManager.RemoveChannel(comChannel.Key))
+                                        {
+                                            comChannel.Close();
+                                            comChannel.Dispose();
+                                        }
+                                    }
+                                }
+                            }
+
+                            desc = String.Format("{0},从串口'{1}'删除", dev.DeviceParameter.DeviceName, dev.DeviceParameter.COM.Port.ToString());
+                        }
+                        else if (dev.CommunicateType == CommunicateType.NET)
+                        {
+                            desc = String.Format("{0}-{1},从网络中删除成功", dev.DeviceParameter.DeviceName, dev.DeviceParameter.NET.RemoteIP);
+                        }
+                        #endregion
+                    }
+
+                    RemoveDeviceFromShows(dev);
+                    RemoveDeviceFromServices(dev);
+
+                    dev.DeviceParameter.Delete();
+                    dev.DeviceDynamic.Delete();
+                    dev.Delete();
+                    dev.Dispose();
+
+                    BindDeviceHandler(dev, dev.DeviceType, false);
+
+                    desc += ",成功";
+                    OnDeleteDeviceCompleted(dev.DeviceParameter.DeviceID, dev.DeviceParameter.DeviceName, true);
+                }
+                else
+                {
+                    desc += ",失败";
+                    OnDeleteDeviceCompleted(dev.DeviceParameter.DeviceID, dev.DeviceParameter.DeviceName, false);
+                }
+
+                Logger.Info(true, desc);
+            }
+        }
+
+        protected abstract void BindDeviceHandler(IRunDevice dev, DeviceType deviceType, bool b);
+
+        protected abstract void ComParameterExchange(object source, ComParameterExchangeArgs e);
+
+        internal abstract void ComChannel_COMError(IComSession com, int port, int baud, string error);
+
+        internal abstract void ComChannel_COMClose(IComSession com, int port, int baud, bool closesuccess);
+
+        internal abstract void ComChannel_COMOpen(IComSession com, int port, int baud, bool opensuccess);
 
         public bool AddGraphicsShow(Show.IGraphicsShow graphicsShow)
         {
@@ -137,7 +352,7 @@ namespace ServerSuperIO.Server
             }
         }
 
-        protected void RemoveDeviceFromShows(IRunDevice dev)
+        private void RemoveDeviceFromShows(IRunDevice dev)
         {
             //--------------删除动态显示的实时数据----------------------//
             foreach (IGraphicsShow show in this._Shows.Values)
@@ -218,7 +433,7 @@ namespace ServerSuperIO.Server
             }
         }
 
-        protected void RemoveDeviceFromServices(IRunDevice dev)
+        private void RemoveDeviceFromServices(IRunDevice dev)
         {
             //---------------------删除服务数据-----------------------//
             foreach (IService service in this._Services.Values)

@@ -24,20 +24,27 @@ namespace ServerSuperIO.Device
         public abstract void ExcuteCommand<T>(T t);
 
         /// <summary>
-        /// 解析数据
+        /// 
         /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
         /// <param name="data"></param>
-        /// <param name="obj"></param>
+        /// <param name="t1"></param>
+        /// <param name="t2"></param>
         /// <returns></returns>
-        public abstract object Analysis(byte[] data, object obj);
+        public abstract dynamic Analysis<T1, T2>(byte[] data, T1 t1, T2 t2);
 
         /// <summary>
-        /// 打包数据
+        /// 
         /// </summary>
-        /// <param name="code">编码或地址</param>
-        /// <param name="obj"></param>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="code"></param>
+        /// <param name="t1"></param>
+        /// <param name="t2"></param>
         /// <returns></returns>
-        public abstract byte[] Package(string code, object obj);
+        public abstract byte[] Package<T1, T2>(string code, T1 t1, T2 t2);
+
 
         /// <summary>
         /// 安装协议驱动

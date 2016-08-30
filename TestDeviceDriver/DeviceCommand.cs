@@ -20,7 +20,7 @@ namespace TestDeviceDriver
             throw new NotImplementedException();
         }
 
-        public override object Analysis(byte[] data, object obj)
+        public override dynamic Analysis<T1,T2>(byte[] data, T1 t1,T2 t2)
         {
             Dyn dyn = new Dyn
             {
@@ -39,7 +39,7 @@ namespace TestDeviceDriver
             return dyn;
         }
 
-        public override byte[] Package(string code, object obj)
+        public override byte[] Package<T1,T2>(string code, T1 t1,T2 t2)
         {
             //发送：0x55 0xaa 0x00 0x61 0x61 0x0d
             byte[] data = new byte[6];

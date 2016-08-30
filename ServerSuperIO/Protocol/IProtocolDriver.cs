@@ -31,22 +31,28 @@ namespace ServerSuperIO.Protocol
         void DriverCommand<T>(string cmdName,T t);
 
         /// <summary>
-        /// 驱动解析
+        /// 
         /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
         /// <param name="cmdName"></param>
         /// <param name="data"></param>
-        /// <param name="obj"></param>
+        /// <param name="t1"></param>
+        /// <param name="t2"></param>
         /// <returns></returns>
-        object DriverAnalysis(string cmdName, byte[] data, object obj);
+        dynamic DriverAnalysis<T1, T2>(string cmdName, byte[] data, T1 t1, T2 t2);
 
         /// <summary>
-        /// 驱动打包
+        /// 
         /// </summary>
-        /// <param name="code">编码或地址</param>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="code"></param>
         /// <param name="cmdName"></param>
-        /// <param name="obj"></param>
+        /// <param name="t1"></param>
+        /// <param name="t2"></param>
         /// <returns></returns>
-        byte[] DriverPackage(string code, string cmdName, object obj);
+        byte[] DriverPackage<T1, T2>(string code, string cmdName, T1 t1, T2 t2);
 
         /// <summary>
         /// 数据校验

@@ -129,7 +129,7 @@ namespace ServerSuperIO.Device
         public virtual IList<byte[]> Receive(IChannel io, IReceiveFilter receiveFilter)
         {
             IList<byte[]> list = new List<byte[]>();
-            if (!this.Server.ServerConfig.StartReceiveDataFliter)
+            if (!io.Server.ServerConfig.StartReceiveDataFliter)
             {
                 byte[] data = io.Read();
                 if (data != null && data.Length > 0)

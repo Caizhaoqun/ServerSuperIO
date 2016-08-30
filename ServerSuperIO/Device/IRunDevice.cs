@@ -9,7 +9,7 @@ using ServerSuperIO.Server;
 
 namespace ServerSuperIO.Device
 {
-    public interface IRunDevice:IVirtualDevice
+    public interface IRunDevice: IServerProvider,IVirtualDevice
     {
         #region º¯Êý½Ó¿Ú
 

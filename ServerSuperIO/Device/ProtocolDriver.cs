@@ -100,18 +100,21 @@ namespace ServerSuperIO.Device
         }
 
         /// <summary>
-        /// 解析数据
+        /// 
         /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
         /// <param name="cmdName"></param>
         /// <param name="data"></param>
-        /// <param name="obj"></param>
+        /// <param name="t1"></param>
+        /// <param name="t2"></param>
         /// <returns></returns>
-        public object DriverAnalysis(string cmdName, byte[] data, object obj)
+        public dynamic DriverAnalysis<T1,T2>(string cmdName, byte[] data, T1 t1,T2 t2)
         {
             IProtocolCommand cmd = GetProcotolCommand(cmdName);
             if (cmd != null)
             {
-                return cmd.Analysis(data, obj);
+                return cmd.Analysis<T1, T2>(data, t1, t2);
             }
             else
             {
@@ -120,18 +123,21 @@ namespace ServerSuperIO.Device
         }
 
         /// <summary>
-        /// 打包数据
+        /// 
         /// </summary>
-        /// <param name="code">编码或地址</param>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="code"></param>
         /// <param name="cmdName"></param>
-        /// <param name="obj"></param>
+        /// <param name="t1"></param>
+        /// <param name="t2"></param>
         /// <returns></returns>
-        public byte[] DriverPackage(string code, string cmdName, object obj)
+        public byte[] DriverPackage<T1, T2>(string code, string cmdName, T1 t1,T2 t2)
         {
             IProtocolCommand cmd = GetProcotolCommand(cmdName);
             if (cmd != null)
             {
-                return cmd.Package(code, obj);
+                return cmd.Package<T1, T2>(code, t1, t2);
             }
             else
             {
