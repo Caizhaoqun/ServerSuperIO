@@ -1,22 +1,22 @@
 ﻿using System;
 
-namespace ServerSuperIO.CommandCache
+namespace ServerSuperIO.DataCache
 {
-    public interface ICommand
+    public interface ISendCommand
     {
         /// <summary>
         /// 命令字节
         /// </summary>
-        byte[] CommandBytes { get; }
+        byte[] Bytes { get; }
 
         /// <summary>
         /// 命令关键字
         /// </summary>
-        string CommandKey { get; }
+        string Key { get; }
 
         /// <summary>
         /// 命令优先级
         /// </summary>
-        CommandPriority Priority { get; }
+        Priority Priority { get; }
     }
 }

@@ -3,22 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Timers;
-using ServerSuperIO.CommandCache;
 using ServerSuperIO.Common;
 using ServerSuperIO.Communicate;
+using ServerSuperIO.DataCache;
 using ServerSuperIO.Log;
 using ServerSuperIO.Protocol;
 using ServerSuperIO.Server;
 
 namespace ServerSuperIO.Device
 {
-    public abstract class RunDevice : ServerProvider,IRunDevice
+    public abstract class RunDevice : ServerProvider, IRunDevice
     {
-        private string _SaveBytesPath = AppDomain.CurrentDomain.BaseDirectory+"原始数据";
+        private string _SaveBytesPath = AppDomain.CurrentDomain.BaseDirectory + "原始数据";
         private bool _IsRunTimer = false;
         private System.Timers.Timer _Timer = null;
-        private ICommandCache _CommandCache = null;
-        private readonly object _SyncLock=new object();
+        private readonly object _SyncLock = new object();
         private bool _IsDisposed = false; //是否释放资源
 
         private MonitorChannelForm _monitorChannelForm = null;
@@ -30,10 +29,9 @@ namespace ServerSuperIO.Device
         {
             this.Tag = null;
             this.IsRunDevice = true;
-            this.DevicePriority=DevicePriority.Normal;
-            this._CommandCache=new CommandCache.CommandCache();
+            this.DevicePriority = DevicePriority.Normal;
 
-            this._Timer = new Timer(1000) {AutoReset = true};
+            this._Timer = new Timer(1000) { AutoReset = true };
             this._Timer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
             this.IsRunTimer = false;
             this.RunTimerInterval = 1000;
@@ -83,14 +81,14 @@ namespace ServerSuperIO.Device
         {
             byte[] data = new byte[] { };
             //如果没有命令就增加实时数据的命令
-            if (this.CommandCache.Count <= 0)
+            if (this.Protocol.SendCache.Count <= 0)
             {
                 data = this.GetConstantCommand();
                 this.DevicePriority = DevicePriority.Normal;
             }
             else
             {
-                data = this.CommandCache.Get();
+                data = this.Protocol.SendCache.Get();
                 this.DevicePriority = DevicePriority.Priority;
             }
             return data;
@@ -107,9 +105,9 @@ namespace ServerSuperIO.Device
         /// </summary>
         /// <param name="io"></param>
         /// <param name="senddata"></param>
-        public virtual void Send(IChannel io, byte[] senddata)
+        public virtual int Send(IChannel io, byte[] senddata)
         {
-            io.Write(senddata);
+            return io.Write(senddata);
         }
 
         /// <summary>
@@ -120,6 +118,41 @@ namespace ServerSuperIO.Device
         public virtual byte[] Receive(IChannel io)
         {
             return io.Read();
+        }
+
+        /// <summary>
+        /// 接收数据接口
+        /// </summary>
+        /// <param name="io"></param>
+        /// <param name="receiveFilter"></param>
+        /// <returns></returns>
+        public virtual IList<byte[]> Receive(IChannel io, IReceiveFilter receiveFilter)
+        {
+            IList<byte[]> list = new List<byte[]>();
+            if (!io.Server.ServerConfig.StartReceiveDataFliter)
+            {
+                byte[] data = io.Read();
+                if (data != null && data.Length > 0)
+                {
+                    list.Add(data);
+                }
+            }
+            else
+            {
+                if (receiveFilter == null)
+                {
+                    byte[] data = io.Read();
+                    if (data != null && data.Length > 0)
+                    {
+                        list.Add(data);
+                    }
+                }
+                else
+                {
+                    return io.Read(receiveFilter);
+                }
+            }
+            return list;
         }
 
         /// <summary>
@@ -161,51 +194,68 @@ namespace ServerSuperIO.Device
                 }
 
                 //---------------------读取数据--------------------------//
-                byte[] revdata = this.Receive(io);
+                IList<byte[]> dataList = this.Receive(io, Protocol.ReceiveFilter);
 
-                this.ShowMonitorData(revdata, "接收");
-
-                this.SaveBytes(revdata, "接收");
-
-                //---------------------检测通讯状态----------------------//
-                CommunicateState state = this.CheckCommunicateState(revdata);
-
-                if (this.DeviceDynamic.CommunicateState != state)
+                if (dataList != null && dataList.Count > 0)
                 {
-                    this.DeviceDynamic.CommunicateState = state;
-                    this.CommunicateStateChanged(state);
-                }
-
-                IRequestInfo info = new RequestInfo()
-                {
-                    Key = io.Key,
-                    Data = revdata,
-                    Channel = null
-                };
-
-                if (state == CommunicateState.Communicate)
-                {
-                    this.Communicate(info);
-                }
-                else if (state == CommunicateState.Interrupt)
-                {
-                    this.CommunicateInterrupt(info);
-                }
-                else if (state == CommunicateState.Error)
-                {
-                    this.CommunicateError(info);
+                    foreach (var revdata in dataList)
+                    {
+                        InternalRun(io.Key, null, revdata);
+                    }
                 }
                 else
                 {
-                    this.CommunicateNone();
+                    InternalRun(io.Key,null, new byte[] { });
                 }
-
-                this.Alert();
-
-                this.Save();
-
-                this.Show();
             }
+        }
+
+        private void InternalRun( string key,IChannel io, byte[] revdata)
+        {
+            #region
+            this.ShowMonitorData(revdata, "接收");
+
+            this.SaveBytes(revdata, "接收");
+
+            //---------------------检测通讯状态----------------------//
+            CommunicateState state = this.CheckCommunicateState(revdata);
+
+            if (this.DeviceDynamic.CommunicateState != state)
+            {
+                this.DeviceDynamic.CommunicateState = state;
+                this.CommunicateStateChanged(state);
+            }
+
+            IRequestInfo info = new RequestInfo()
+            {
+                Key = key,
+                Data = revdata,
+                Channel = io
+            };
+
+            if (state == CommunicateState.Communicate)
+            {
+                this.Communicate(info);
+            }
+            else if (state == CommunicateState.Interrupt)
+            {
+                this.CommunicateInterrupt(info);
+            }
+            else if (state == CommunicateState.Error)
+            {
+                this.CommunicateError(info);
+            }
+            else
+            {
+                this.CommunicateNone();
+            }
+
+            this.Alert();
+
+            this.Save();
+
+            this.Show();
+            #endregion
         }
 
         /// <summary>
@@ -214,7 +264,7 @@ namespace ServerSuperIO.Device
         /// <param name="key"></param>
         /// <param name="channel"></param>
         /// <param name="revData"></param>
-        public void Run(string key,IChannel channel, byte[] revData)
+        public void Run(string key, IChannel channel, byte[] revData)
         {
             //不运行设备
             if (!this.IsRunDevice)
@@ -235,43 +285,7 @@ namespace ServerSuperIO.Device
             }
             else
             {
-                IRequestInfo info = new RequestInfo()
-                {
-                    Key = key,
-                    Data = revData,
-                    Channel = channel
-                };
-                //---------------------检测通讯状态----------------------//
-                CommunicateState state = this.CheckCommunicateState(revData);
-
-                if (this.DeviceDynamic.CommunicateState != state)
-                {
-                    this.DeviceDynamic.CommunicateState = state;
-                    this.CommunicateStateChanged(state);
-                }
-
-                if (state == CommunicateState.Communicate)
-                {
-                    this.Communicate(info);
-                }
-                else if (state == CommunicateState.Interrupt)
-                {
-                    this.CommunicateInterrupt(info);
-                }
-                else if (state == CommunicateState.Error)
-                {
-                    this.CommunicateError(info);
-                }
-                else
-                {
-                    this.CommunicateNone();
-                }
-
-                this.Alert();
-
-                this.Save();
-
-                this.Show();
+                InternalRun(key, channel, revData);
             }
         }
 
@@ -410,7 +424,7 @@ namespace ServerSuperIO.Device
         public int RunTimerInterval
         {
             set { this._Timer.Interval = value; }
-            get { return (int) this._Timer.Interval; }
+            get { return (int)this._Timer.Interval; }
         }
 
         /// <summary>
@@ -508,7 +522,7 @@ namespace ServerSuperIO.Device
         /// <summary>
         /// 设备类型
         /// </summary>
-        public abstract DeviceType DeviceType { get;}
+        public abstract DeviceType DeviceType { get; }
 
         /// <summary>
         /// 设备编号
@@ -526,52 +540,12 @@ namespace ServerSuperIO.Device
         public CommunicateType CommunicateType { get; set; }
 
         /// <summary>
-        /// 命令缓冲区，如果没有可用的命令，则调用GetRealTimeCommand接口
-        /// </summary>
-        public ICommandCache CommandCache
-        {
-            get { return this._CommandCache; }
-        }
-
-        /// <summary>
         /// 是否运行设备
         /// </summary>
         public bool IsRunDevice { set; get; }
 
 
         public abstract System.Windows.Forms.Control DeviceGraphics { get; }
-
-        ///// <summary>
-        ///// 接口数据事件
-        ///// </summary>
-        //public event ReceiveDataHandler ReceiveData;
-
-        //public void OnReceiveData(byte[] revdata)
-        //{
-        //    if (this.ReceiveData == null) return;
-        //    ReceiveDataArgs args = null;
-        //    if (this.CommunicateType == CommunicateType.COM)
-        //    {
-        //        args = new ReceiveDataArgs(
-        //            this.DeviceParameter.DeviceID,
-        //            this.DeviceParameter.DeviceAddr,
-        //            this.DeviceParameter.DeviceName,
-        //            this.DeviceParameter.COM.Port,
-        //            this.DeviceParameter.COM.Baud,
-        //            revdata);
-        //    }
-        //    else if (this.CommunicateType == CommunicateType.NET)
-        //    {
-        //        args = new ReceiveDataArgs(
-        //            this.DeviceParameter.DeviceID,
-        //            this.DeviceParameter.DeviceAddr,
-        //            this.DeviceParameter.DeviceName,
-        //            this.DeviceParameter.NET.RemoteIP,
-        //            this.DeviceParameter.NET.RemotePort,
-        //            revdata);
-        //    }
-        //    this.ReceiveData(this, args);
-        //}
 
         /// <summary>
         /// 发送数据事件
@@ -662,24 +636,8 @@ namespace ServerSuperIO.Device
                 obj,
                 this.DeviceType);
 
-            this.DeviceObjectChanged.BeginInvoke(this, args,null,null);
+            this.DeviceObjectChanged.BeginInvoke(this, args, null, null);
         }
-
-        //public event DeleteDeviceCompletedHandler DeleteDeviceCompleted;
-        ///// <summary>
-        ///// 删除设备事件
-        ///// </summary>
-        //public void OnDeleteDeviceCompleted()
-        //{
-        //    if (this.DeleteDeviceCompleted == null) return;
-
-        //    DeleteDeviceCompletedArgs args = new DeleteDeviceCompletedArgs(
-        //        this.DeviceParameter.DeviceID,
-        //        this.DeviceParameter.DeviceAddr,
-        //        this.DeviceParameter.DeviceName);
-
-        //    this.DeleteDeviceCompleted(this, args);
-        //}
 
         /// <summary>
         /// 虚拟设备运行接口

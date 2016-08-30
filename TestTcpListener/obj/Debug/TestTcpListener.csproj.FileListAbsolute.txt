@@ -9,3 +9,9 @@ E:\工作目录\工作区\平台软件\ServerSuperIO\TestTcpListener\obj\Debug\T
 E:\工作目录\工作区\平台软件\ServerSuperIO\bin\TestTcpListener.exe.config
 E:\工作目录\工作区\平台软件\ServerSuperIO\bin\TestTcpListener.exe
 E:\工作目录\工作区\平台软件\ServerSuperIO\bin\TestTcpListener.pdb
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\bin\TestTcpListener.exe.config
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\bin\TestTcpListener.exe
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\bin\TestTcpListener.pdb
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\TestTcpListener\obj\Debug\TestTcpListener.csprojResolveAssemblyReference.cache
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\TestTcpListener\obj\Debug\TestTcpListener.exe
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\TestTcpListener\obj\Debug\TestTcpListener.pdb

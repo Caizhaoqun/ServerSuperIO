@@ -62,7 +62,7 @@ namespace ServerSuperIO.Config
         /// <summary>
         /// 是否检测相同的SocketSession
         /// </summary>
-        bool IsCheckSameSocketSession { get; set; }
+        bool CheckSameSocketSession { get; set; }
 
         /// <summary>
         /// 最大连接数
@@ -98,5 +98,25 @@ namespace ServerSuperIO.Config
         /// 分发模式
         /// </summary>
         DeliveryMode DeliveryMode { get; set; }
+
+        /// <summary>
+        /// 是否启动接收数据的过滤器功能。默认为不启动。
+        /// </summary>
+        bool StartReceiveDataFliter { get; set; }
+
+        /// <summary>
+        /// 是否清除SocketSession
+        /// </summary>
+        bool ClearSocketSession { get; set; }
+
+        /// <summary>
+        /// 清除SocketSession间隔
+        /// </summary>
+        int ClearSocketSessionInterval { get; set; }
+
+        /// <summary>
+        /// 清除超时时间。
+        /// </summary>
+        int ClearSocketSessionTimeOut { get; set; }
     }
 }

@@ -2,22 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using ServerSuperIO.CommandCache;
+using ServerSuperIO.DataCache;
 
-namespace ServerSuperIO.CommandCache
+namespace ServerSuperIO.DataCache
 {
     /// <summary>
     /// 线程安全的轻量泛型类提供了从一组键到一组值的映射。
     /// </summary>
     /// <typeparam name="TKey">字典中的键的类型</typeparam>
     /// <typeparam name="TValue">字典中的值的类型</typeparam>
-    public class CommandCache : ServerSuperIO.CommandCache.ICommandCache
+    public class SendCache : ServerSuperIO.DataCache.ISendCache
     {
         #region Fields
         /// <summary>
         /// 内部的 Dictionary 容器
         /// </summary>
-        private List<ICommand> _CmdCache = new List<ICommand>();
+        private List<ISendCommand> _CmdCache = new List<ISendCommand>();
         /// <summary>
         /// 用于并发同步访问的 RW 锁对象
         /// </summary>
@@ -38,21 +38,21 @@ namespace ServerSuperIO.CommandCache
         /// <param name="value">添加的元素的值。对于引用类型，该值可以为 空引用</param>
         public void Add(string cmdkey, byte[] cmdbytes)
         {
-            this.Add(cmdkey, cmdbytes, CommandPriority.Normal);
+            this.Add(cmdkey, cmdbytes, Priority.Normal);
         }
 
-        public void Add(string cmdkey, byte[] cmdbytes, CommandPriority priority)
+        public void Add(string cmdkey, byte[] cmdbytes, Priority priority)
         {
             rwLock.AcquireWriterLock(lockTimeOut);
             try
             {
-                Command cmd = new Command(cmdkey, cmdbytes,priority);
+                SendCommand cmd = new SendCommand(cmdkey, cmdbytes,priority);
                 this._CmdCache.Add(cmd);
             }
             finally { rwLock.ReleaseWriterLock(); }
         }
 
-        public void Add(ICommand cmd)
+        public void Add(ISendCommand cmd)
         {
             rwLock.AcquireWriterLock(lockTimeOut);
             try
@@ -78,7 +78,7 @@ namespace ServerSuperIO.CommandCache
             rwLock.AcquireWriterLock(lockTimeOut);
             try
             {
-                ICommand cmd = this._CmdCache.FirstOrDefault(c => c.CommandKey == cmdkey);
+                ISendCommand cmd = this._CmdCache.FirstOrDefault(c => c.Key == cmdkey);
                 if(cmd!=null)
                 {
                     this._CmdCache.Remove(cmd);
@@ -108,7 +108,7 @@ namespace ServerSuperIO.CommandCache
         /// </summary>
         /// <param name="priority"></param>
         /// <returns></returns>
-        public byte[] Get(CommandPriority priority)
+        public byte[] Get(Priority priority)
         {
             if (this._CmdCache.Count <= 0)
             {
@@ -119,17 +119,17 @@ namespace ServerSuperIO.CommandCache
             try
             {
                 byte[] data = new byte[] { };
-                if (priority == CommandPriority.Normal)
+                if (priority == Priority.Normal)
                 {
-                    data = this._CmdCache[0].CommandBytes;
+                    data = this._CmdCache[0].Bytes;
                     this._CmdCache.RemoveAt(0);
                 }
-                else if(priority==CommandPriority.High)
+                else if(priority==Priority.High)
                 {
-                    ICommand cmd = this._CmdCache.FirstOrDefault(c => c.Priority == CommandPriority.High);
+                    ISendCommand cmd = this._CmdCache.FirstOrDefault(c => c.Priority == Priority.High);
                     if (cmd != null)
                     {
-                        data = cmd.CommandBytes;
+                        data = cmd.Bytes;
                         this._CmdCache.Remove(cmd);
                     }
                 }
@@ -151,14 +151,14 @@ namespace ServerSuperIO.CommandCache
             rwLock.AcquireReaderLock(lockTimeOut);
             try
             {
-                ICommand cmd=this._CmdCache.FirstOrDefault(c => c.CommandKey == cmdkey);
+                ISendCommand cmd=this._CmdCache.FirstOrDefault(c => c.Key == cmdkey);
                 if (cmd == null)
                 {
                     return new byte[] { };
                 }
                 else
                 {
-                    byte[] data = cmd.CommandBytes;
+                    byte[] data = cmd.Bytes;
                     this._CmdCache.Remove(cmd);
                     return data;
                 }
@@ -175,12 +175,12 @@ namespace ServerSuperIO.CommandCache
         /// <returns></returns>
         public byte[] Get()
         {
-            return Get(CommandPriority.Normal);
+            return Get(Priority.Normal);
         }
 
         public int Count
         {
-            get { return this._CmdCache.Count; }
+            get { return _CmdCache.Count; }
         }
         #endregion
     }

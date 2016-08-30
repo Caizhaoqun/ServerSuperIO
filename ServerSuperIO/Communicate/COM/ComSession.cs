@@ -1,20 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.SqlTypes;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
+using ServerSuperIO.DataCache;
+using ServerSuperIO.Protocol;
 using ServerSuperIO.Server;
 
 namespace ServerSuperIO.Communicate.COM
 {
-    internal class ComSession : ServerProvider, IComSession
+    internal class ComSession : BaseChannel, IComSession
     {
         private readonly object _SyncLock = new object();
         private SerialPort _sp = null;
         private bool _IsDisposed = false;
-        private byte[] _ReadBuffer = null;
-
+        //private byte[] _ReadBuffer = null;
+        private IReceiveCache _ReceiveCache = null;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -26,7 +29,7 @@ namespace ServerSuperIO.Communicate.COM
             SessionID = Guid.NewGuid().ToString();
             _sp = new SerialPort
             {
-                PortName = Utils.PortToString(com),
+                PortName = ComUtils.PortToString(com),
                 BaudRate = baud,
               
                 DataBits = 8,
@@ -48,7 +51,7 @@ namespace ServerSuperIO.Communicate.COM
             SessionID = Guid.NewGuid().ToString();
             _sp = new SerialPort
             {
-                PortName = Utils.PortToString(com),
+                PortName = ComUtils.PortToString(com),
                 BaudRate = baud,
                 DataBits = databits,
                 StopBits = stopbits,
@@ -64,13 +67,14 @@ namespace ServerSuperIO.Communicate.COM
             Dispose(false);
         }
 
-        public void Initialize()
+        public override void Initialize()
         {
-            _sp.ReadBufferSize = this.Server.Config.ComReadBufferSize;
-            _sp.ReadTimeout = this.Server.Config.ComReadTimeout;
-            _sp.WriteBufferSize = this.Server.Config.ComWriteBufferSize;
-            _sp.WriteTimeout = this.Server.Config.ComWriteTimeout;
-            _ReadBuffer = new byte[this.Server.Config.ComReadBufferSize];
+            _sp.ReadBufferSize = this.Server.ServerConfig.ComReadBufferSize;
+            _sp.ReadTimeout = this.Server.ServerConfig.ComReadTimeout;
+            _sp.WriteBufferSize = this.Server.ServerConfig.ComWriteBufferSize;
+            _sp.WriteTimeout = this.Server.ServerConfig.ComWriteTimeout;
+            //_ReadBuffer = new byte[this.Server.Config.ComReadBufferSize];
+            _ReceiveCache=new ReceiveCache(this.Server.ServerConfig.ComReadBufferSize);
         }
 
         /// <summary>
@@ -86,7 +90,7 @@ namespace ServerSuperIO.Communicate.COM
         /// </summary>
         public int Port
         {
-            get { return Utils.PortToInt(this._sp.PortName); }
+            get { return ComUtils.PortToInt(this._sp.PortName); }
         }
 
         /// <summary>
@@ -156,7 +160,7 @@ namespace ServerSuperIO.Communicate.COM
         /// <summary>
         /// 关闭
         /// </summary>
-        public void Close()
+        public override void Close()
         {
             Dispose(true);
 
@@ -173,7 +177,14 @@ namespace ServerSuperIO.Communicate.COM
         /// <returns></returns>
         public int InternalRead(byte[] data)
         {
-            return this._sp.Read(data, 0, data.Length);
+            if (this._sp.BytesToRead > 0)
+            {
+                return this._sp.Read(data, 0, data.Length);
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         /// <summary>
@@ -292,18 +303,18 @@ namespace ServerSuperIO.Communicate.COM
         /// </summary>
         public event COMErrorHandler COMError;
 
-        /// <summary>
-        /// 同步对象锁
-        /// </summary>
-        public object SyncLock
-        {
-            get { return this._SyncLock; }
-        }
+        ///// <summary>
+        ///// 同步对象锁
+        ///// </summary>
+        //public object SyncLock
+        //{
+        //    get { return this._SyncLock; }
+        //}
 
         /// <summary>
         /// 串口号为关键字
         /// </summary>
-        public string Key
+        public override string Key
         {
             get { return this._sp.PortName; }
         }
@@ -311,41 +322,77 @@ namespace ServerSuperIO.Communicate.COM
         /// <summary>
         /// 唯一ID
         /// </summary>
-        public string SessionID { get; private set; }
+        public override string SessionID { get; protected set; }
 
         /// <summary>
         /// IO通讯操作实例
         /// </summary>
-        public IChannel Channel
+        public override IChannel Channel
         {
             get { return (IChannel)this; }
         }
 
-        /// <summary>
-        /// 读数据接口
-        /// </summary>
-        /// <returns></returns>
-        public byte[] Read()
+        ///// <summary>
+        ///// 读数据接口
+        ///// </summary>
+        ///// <returns></returns>
+        //public  byte[] Read()
+        //{
+        //    IList<byte[]> listBytes=ReadReceiveFilter(null);
+        //    if (listBytes != null)
+        //    {
+        //        return listBytes[0];
+        //    }
+        //    else
+        //    {
+        //        return null;
+        //    }
+        //}
+
+        //public IList<byte[]> Read(IReceiveFilter receiveFilter)
+        //{
+        //    if (receiveFilter == null)
+        //    {
+        //        throw new NullReferenceException("receiveFilter为空");
+        //    }
+
+        //    return ReadReceiveFilter(receiveFilter);
+        //}
+
+        protected override IList<byte[]> ReceiveDataFilter(IReceiveFilter receiveFilter)
         {
-            System.Threading.Thread.Sleep(Server.Config.ComLoopInterval);
-            if (_ReadBuffer != null)
+            System.Threading.Thread.Sleep(Server.ServerConfig.ComLoopInterval);
+            if (_ReceiveCache != null && _ReceiveCache.ReceiveBuffer != null)
             {
-                int num = InternalRead(_ReadBuffer, 0, _ReadBuffer.Length);
+                if (_ReceiveCache.NextOffset >= _ReceiveCache.InitOffset+_ReceiveCache.Capacity)
+                {
+                    _ReceiveCache.Reset();
+                }
+
+                int num = InternalRead(_ReceiveCache.ReceiveBuffer, _ReceiveCache.NextOffset, _ReceiveCache.InitOffset+_ReceiveCache.Capacity - _ReceiveCache.NextOffset);
 
                 if (num > 0)
                 {
-                    byte[] data = new byte[num];
-                    Buffer.BlockCopy(_ReadBuffer, 0, data, 0, data.Length);
-                    return data;
+                    _ReceiveCache.DataLength += num;
+                    if (receiveFilter == null)
+                    {
+                        IList<byte[]> listBytes=new List<byte[]>();
+                        listBytes.Add(_ReceiveCache.Get());
+                        return listBytes;
+                    }
+                    else
+                    {
+                        return _ReceiveCache.Get(receiveFilter);
+                    }
                 }
                 else
                 {
-                    return new byte[] { };
+                    return null;
                 }
             }
             else
             {
-                return new byte[] { };
+                return null;
             }
         }
 
@@ -354,7 +401,7 @@ namespace ServerSuperIO.Communicate.COM
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public int Write(byte[] data)
+        public override int Write(byte[] data)
         {
             int sendBufferSize = this._sp.WriteBufferSize;
             if (data.Length <= sendBufferSize)
@@ -383,7 +430,7 @@ namespace ServerSuperIO.Communicate.COM
         /// <summary>
         /// 负责通讯的类型
         /// </summary>
-        public CommunicateType CommunicationType
+        public override CommunicateType CommunicationType
         {
             get { return CommunicateType.COM; }
         }
@@ -391,7 +438,7 @@ namespace ServerSuperIO.Communicate.COM
         /// <summary>
         /// 是否释放了资源
         /// </summary>
-        public bool IsDisposed
+        public override bool IsDisposed
         {
             get { return _IsDisposed; }
         }
@@ -399,7 +446,7 @@ namespace ServerSuperIO.Communicate.COM
         /// <summary>
         /// 释放资源
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
@@ -418,6 +465,7 @@ namespace ServerSuperIO.Communicate.COM
                     _sp.Close();
                     _sp.Dispose();
                 }
+
                 _IsDisposed = true;
             }
         }

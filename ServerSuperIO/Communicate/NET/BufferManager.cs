@@ -47,7 +47,6 @@ namespace ServerSuperIO.Communicate.NET
         // returns true if the buffer was successfully set, else false
         internal bool SetBuffer(SocketAsyncEventArgs args)
         {
-
             if (this.freeIndexPool.Count > 0)
             {
                 //This if-statement is only true if you have called the FreeBuffer

@@ -48,13 +48,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assembly\IObjectBuilder.cs" />
+    <Compile Include="Assembly\TypeCreator.cs" />
     <Compile Include="Base\IPlugin.cs" />
     <Compile Include="Base\Manager.cs" />
-    <Compile Include="CommandCache\Command.cs" />
-    <Compile Include="CommandCache\CommandCache.cs" />
-    <Compile Include="CommandCache\CommandPriority.cs" />
-    <Compile Include="CommandCache\ICommand.cs" />
-    <Compile Include="CommandCache\ICommandCache.cs" />
+    <Compile Include="Common\BinaryExtenstion.cs" />
+    <Compile Include="Common\ConsoleUtil.cs" />
+    <Compile Include="Communicate\BaseChannel.cs" />
+    <Compile Include="Communicate\NET\IReceivePackage.cs" />
+    <Compile Include="Communicate\NET\ISocketAsyncEventArgsEx.cs" />
+    <Compile Include="Communicate\NET\ReceivePackage.cs" />
+    <Compile Include="Communicate\NET\SocketAsyncEventArgsEx.cs" />
+    <Compile Include="DataCache\IReceiveCache.cs" />
+    <Compile Include="Persistence\XmlPersistence.cs" />
+    <Compile Include="Protocol\FixedEndReceiveFliter.cs" />
+    <Compile Include="Protocol\FixedHeadAndEndReceiveFliter.cs" />
+    <Compile Include="Protocol\FixedHeadAndLengthReceiveFliter.cs" />
+    <Compile Include="Protocol\FixedHeadReceiveFliter.cs" />
+    <Compile Include="Protocol\FixedLengthReceiveFliter.cs" />
+    <Compile Include="Protocol\IReceiveFilter.cs" />
+    <Compile Include="DataCache\ReceiveCache.cs" />
+    <Compile Include="DataCache\SendCommand.cs" />
+    <Compile Include="DataCache\SendCache.cs" />
+    <Compile Include="DataCache\Priority.cs" />
+    <Compile Include="DataCache\ISendCommand.cs" />
+    <Compile Include="DataCache\ISendCache.cs" />
     <Compile Include="Common\AsyncUtil.cs" />
     <Compile Include="Common\BinaryUtil.cs" />
     <Compile Include="Common\FileUtil.cs" />
@@ -68,7 +86,7 @@
     <Compile Include="Communicate\COM\IComController.cs" />
     <Compile Include="Communicate\COM\IComSession.cs" />
     <Compile Include="Communicate\COM\ComSession.cs" />
-    <Compile Include="Communicate\COM\Utils.cs" />
+    <Compile Include="Communicate\COM\ComUtils.cs" />
     <Compile Include="Communicate\ControlMode.cs" />
     <Compile Include="Communicate\IChannel.cs" />
     <Compile Include="Communicate\CommunicateType.cs" />
@@ -103,9 +121,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Communicate\RequestInfo.cs" />
-    <Compile Include="Config\Config.cs" />
-    <Compile Include="Config\IConfig.cs" />
-    <Compile Include="Config\IConfigProvider.cs" />
+    <Compile Include="Config\ServerConfig.cs" />
+    <Compile Include="Config\IServerConfig.cs" />
+    <Compile Include="Config\IServerConfigProvider.cs" />
     <Compile Include="Device\DeviceManager.cs" />
     <Compile Include="Device\DeviceParameter.cs" />
     <Compile Include="Device\DeviceDynamic.cs" />
@@ -142,17 +160,21 @@
     <Compile Include="Protocol\IProtocolCommand.cs" />
     <Compile Include="Protocol\IProtocolDriver.cs" />
     <Compile Include="Common\EnumDescriptionAttribute.cs" />
-    <Compile Include="Server\AppServer.cs" />
-    <Compile Include="Server\AppServerBase.cs" />
+    <Compile Include="Server\ComServer.cs" />
+    <Compile Include="Server\EqualException.cs" />
+    <Compile Include="Server\IServerFactory.cs" />
+    <Compile Include="Server\Server.cs" />
+    <Compile Include="Server\ServerBase.cs" />
+    <Compile Include="Server\ServerFactory.cs" />
     <Compile Include="Server\ServerProvider.cs" />
     <Compile Include="Server\Handler.cs" />
     <Compile Include="Server\IServer.cs" />
     <Compile Include="Server\IServerProvider.cs" />
     <Compile Include="Server\NotEqualException.cs" />
-    <Compile Include="Server\Server.cs" />
-    <Compile Include="Service\AppService.cs" />
+    <Compile Include="Server\SocketServer.cs" />
+    <Compile Include="Service\Service.cs" />
     <Compile Include="Service\Handler.cs" />
-    <Compile Include="Service\IAppService.cs" />
+    <Compile Include="Service\IService.cs" />
     <Compile Include="Show\GraphicsShow.cs" />
     <Compile Include="Show\Handler.cs" />
     <Compile Include="Show\IGraphicsShow.cs" />

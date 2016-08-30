@@ -15,13 +15,13 @@ namespace ServerSuperIO.Communicate.NET
         private Socket _ListenSocket;//侦听Socket
 
         private SocketAsyncEventArgs _AcceptSAE;
-
+        
         public TcpSocketListener(ListenerInfo info) : base(info)
         {
             _ListenBackLog = info.BackLog;
         }
 
-        public override bool Start(IConfig config)
+        public override bool Start(IServerConfig config)
         {
             _ListenSocket = new Socket(this.ListenerInfo.EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
@@ -59,9 +59,12 @@ namespace ServerSuperIO.Communicate.NET
                 if (_ListenSocket == null)
                     return;
 
-                _AcceptSAE.Completed -= new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_Completed);
-                _AcceptSAE.Dispose();
-                _AcceptSAE = null;
+                if (_AcceptSAE != null)
+                {
+                    _AcceptSAE.Completed -= new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_Completed);
+                    _AcceptSAE.Dispose();
+                    _AcceptSAE = null;
+                }
 
                 try
                 {

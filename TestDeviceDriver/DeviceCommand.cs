@@ -15,15 +15,20 @@ namespace TestDeviceDriver
             get { return "61"; }
         }
 
-        public override object Analysis(byte[] data, object obj)
+        public override void ExcuteCommand<T>(T t)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override dynamic Analysis<T1,T2>(byte[] data, T1 t1,T2 t2)
         {
             Dyn dyn = new Dyn
             {
                 CurDT = DateTime.Now,
-                ProHead = this.ProtocolDriver.GetProHead(data),
+                ProHead = this.ProtocolDriver.GetHead(data),
                 DeviceAddr = this.ProtocolDriver.GetAddress(data),
                 Command = this.ProtocolDriver.GetCommand(data),
-                ProEnd = this.ProtocolDriver.GetProEnd(data)
+                ProEnd = this.ProtocolDriver.GetEnd(data)
             };
 
             //一般下位机是单片的话，接收到数据的高低位需要互换，才能正常解析。
@@ -34,13 +39,13 @@ namespace TestDeviceDriver
             return dyn;
         }
 
-        public override byte[] Package(int devaddr, object obj)
+        public override byte[] Package<T1,T2>(string code, T1 t1,T2 t2)
         {
             //发送：0x55 0xaa 0x00 0x61 0x61 0x0d
             byte[] data = new byte[6];
             data[0] = 0x55;
             data[1] = 0xaa;
-            data[2] = (byte)devaddr;
+            data[2] = byte.Parse(code);
             data[3] = 0x61;
             data[4] = this.ProtocolDriver.GetCheckData(data)[0];
             data[5] = 0x0d;

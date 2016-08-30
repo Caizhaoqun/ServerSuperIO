@@ -14,15 +14,16 @@ namespace TestTcpListener
 {
     class Program
     {
-        static Server _server;
+        static IServer _server;
         private static int _Counter = 0;
         static void Main(string[] args)
         {
-            _server=new Server("myserver",new Config
+            _server=new ServerFactory().CreateServer(new ServerConfig()
             {
+                ServerName = "myserver",
                 SocketMode = SocketMode.Udp,
                 ControlMode=ControlMode.Parallel,
-                IsCheckSameSocketSession = false,
+                CheckSameSocketSession = false,
             });
             _server.SocketConnected += server_SocketConnected;
             _server.SocketClosed+=server_SocketClosed;

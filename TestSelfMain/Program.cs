@@ -58,8 +58,9 @@ namespace TestSelfMain
             dev4.CommunicateType = CommunicateType.NET;
             dev4.Initialize(3);
 
-            Server server = new Server("服务1", new Config()
+            IServer server = new ServerFactory().CreateServer(new ServerConfig()
             {
+                ServerName = "服务1",
                 ControlMode = ControlMode.Self
             });
 
@@ -82,9 +83,9 @@ namespace TestSelfMain
             dev1.DeviceParameter.COM.Port = newport;
             dev1.DeviceParameter.COM.Baud = newbaud;
 
-            Service s = new Service();
-            s.AppServiceLog += s_AppServiceLog;
-            server.AddAppService((IAppService)s);
+            TestService.Service s = new TestService.Service();
+            s.ServiceLog += s_AppServiceLog;
+            server.AddService((IService)s);
 
 
             Graphics g = new Graphics();

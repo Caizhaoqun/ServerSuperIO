@@ -1,6 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
-using ServerSuperIO.CommandCache;
+using ServerSuperIO.DataCache;
 using ServerSuperIO.Communicate;
 using ServerSuperIO.Log;
 using ServerSuperIO.Protocol;
@@ -8,7 +9,7 @@ using ServerSuperIO.Server;
 
 namespace ServerSuperIO.Device
 {
-    public interface IRunDevice:IVirtualDevice
+    public interface IRunDevice: IServerProvider,IVirtualDevice
     {
         #region 函数接口
 
@@ -41,7 +42,7 @@ namespace ServerSuperIO.Device
         /// </summary>
         /// <param name="io"></param>
         /// <param name="senddata"></param>
-        void Send(IChannel io, byte[] senddata);
+        int Send(IChannel io, byte[] senddata);
 
         /// <summary>
         /// 读取IO数据接口
@@ -49,6 +50,14 @@ namespace ServerSuperIO.Device
         /// <param name="io"></param>
         /// <returns></returns>
         byte[] Receive(IChannel io);
+
+        /// <summary>
+        /// 接收数据信息，带过滤器
+        /// </summary>
+        /// <param name="io"></param>
+        /// <param name="receiveFilter"></param>
+        /// <returns></returns>
+        IList<byte[]> Receive(IChannel io, IReceiveFilter receiveFilter);
 
         /// <summary>
         /// 同步运行设备（IO）
@@ -230,11 +239,6 @@ namespace ServerSuperIO.Device
         /// 设备的通讯类型
         /// </summary>
         CommunicateType CommunicateType { get;set;}
-
-        /// <summary>
-        /// 命令缓存器，把要发送的命令数据放到这里，框架会自动提取数据进行发送
-        /// </summary>
-        ICommandCache CommandCache { get;}
 
         /// <summary>
         /// 标识是否运行设备，如果为false，调用运行设备接口时直接返回

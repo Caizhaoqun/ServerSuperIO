@@ -11,3 +11,6 @@ E:\工作目录\工作区\平台软件\ServerSuperIO\TestLoopMain\obj\Release\Te
 E:\工作目录\工作区\平台软件\ServerSuperIO\bin\TestLoopMain.exe.config
 E:\工作目录\工作区\平台软件\ServerSuperIO\bin\TestLoopMain.exe
 E:\工作目录\工作区\平台软件\ServerSuperIO\bin\TestLoopMain.pdb
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\bin\TestLoopMain.exe.config
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\TestLoopMain\obj\Release\TestLoopMain.exe
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\TestLoopMain\obj\Release\TestLoopMain.pdb

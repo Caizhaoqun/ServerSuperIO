@@ -33,6 +33,6 @@ namespace ServerSuperIO.Communicate.NET
     /// </summary>
     /// <param name="source"></param>
     /// <param name="socketSession"></param>
-    /// <param name="data"></param>
-    public delegate void SocketReceiveDataHandler(object source, ISocketSession socketSession,byte[] data);
+    /// <param name="dataPackage"></param>
+    public delegate void SocketReceiveDataHandler(object source, ISocketSession socketSession, IReceivePackage dataPackage);
 }

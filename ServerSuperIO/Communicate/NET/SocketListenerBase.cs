@@ -27,7 +27,7 @@ namespace ServerSuperIO.Communicate.NET
         /// </summary>
         /// <param name="config">The server config.</param>
         /// <returns></returns>
-        public abstract bool Start(IConfig config);
+        public abstract bool Start(IServerConfig config);
 
         public abstract void Stop();
 

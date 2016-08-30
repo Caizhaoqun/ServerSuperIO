@@ -11,3 +11,9 @@ E:\工作目录\工作区\平台软件\ServerSuperIO\TestSelfMain\obj\Debug\Test
 E:\工作目录\工作区\平台软件\ServerSuperIO\bin\TestSelfMain.exe.config
 E:\工作目录\工作区\平台软件\ServerSuperIO\bin\TestSelfMain.exe
 E:\工作目录\工作区\平台软件\ServerSuperIO\bin\TestSelfMain.pdb
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\TestSelfMain\obj\Debug\TestSelfMain.csprojResolveAssemblyReference.cache
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\TestSelfMain\obj\Debug\TestSelfMain.exe
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\TestSelfMain\obj\Debug\TestSelfMain.pdb
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\bin\TestSelfMain.exe.config
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\bin\TestSelfMain.exe
+E:\工作目录\工作区\平台软件\ServerSuperIO\trunk\bin\TestSelfMain.pdb

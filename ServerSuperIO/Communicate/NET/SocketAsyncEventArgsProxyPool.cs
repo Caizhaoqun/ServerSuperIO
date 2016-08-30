@@ -80,8 +80,8 @@ namespace ServerSuperIO.Communicate.NET
                         if (pool.TryDequeue(out proxy))
                         {
                             proxy.Reset();
-                            proxy.SocketReceiveEventArgs.Dispose();
-                            proxy.SocketReceiveEventArgs = null;
+                            proxy.SocketReceiveEventArgsEx.Dispose();
+                            proxy.SocketReceiveEventArgsEx = null;
                             proxy.SocketSendEventArgs.Dispose();
                             proxy.SocketSendEventArgs = null;
                         }

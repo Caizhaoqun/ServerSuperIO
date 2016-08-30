@@ -15,21 +15,36 @@ namespace ServerSuperIO.Device
         /// </summary>
         public abstract string Name { get; }
 
-        /// <summary>
-        /// 解析数据
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public abstract object Analysis(byte[] data, object obj);
 
         /// <summary>
-        /// 打包数据
+        /// 执行命令
         /// </summary>
-        /// <param name="devaddr"></param>
-        /// <param name="obj"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="t"></param>
+        public abstract void ExcuteCommand<T>(T t);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="data"></param>
+        /// <param name="t1"></param>
+        /// <param name="t2"></param>
         /// <returns></returns>
-        public abstract byte[] Package(int devaddr, object obj);
+        public abstract dynamic Analysis<T1, T2>(byte[] data, T1 t1, T2 t2);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="code"></param>
+        /// <param name="t1"></param>
+        /// <param name="t2"></param>
+        /// <returns></returns>
+        public abstract byte[] Package<T1, T2>(string code, T1 t1, T2 t2);
+
 
         /// <summary>
         /// 安装协议驱动

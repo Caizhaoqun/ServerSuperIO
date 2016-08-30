@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // 特性集控制。更改这些特性值可修改
 // 与程序集关联的信息。
 [assembly: AssemblyTitle("ServerSuperIO")]
-[assembly: AssemblyDescription("物联网通讯框架")]
+[assembly: AssemblyDescription("Iot Communication Framework")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("唯笑志在")]
+[assembly: AssemblyCompany("唯笑志在(wxzz)")]
 [assembly: AssemblyProduct("ServerSuperIO(SSIO)")]
-[assembly: AssemblyCopyright("Copyright © 唯笑志在")]
+[assembly: AssemblyCopyright("Copyright © 唯笑志在(wxzz)")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // 可以指定所有这些值，也可以使用“生成号”和“修订号”的默认值，
 // 方法是按如下所示使用“*”:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2")]
-[assembly: AssemblyFileVersion("1.2")]
+[assembly: AssemblyVersion("2.2")]
+[assembly: AssemblyFileVersion("2.2")]

@@ -41,6 +41,9 @@ namespace ServerSuperIO.Communicate.NET
         /// </summary>
         event CloseSocketHandler CloseSocket;
 
+        /// <summary>
+        /// 接收数据
+        /// </summary>
         event SocketReceiveDataHandler SocketReceiveData;
 
         ///// <summary>
@@ -53,6 +56,17 @@ namespace ServerSuperIO.Communicate.NET
         /// </summary>
         /// <param name="type">true:异步，false:同步</param>
         void TrySend(byte[] data,bool type);
+
+        /// <summary>
+        /// 链接的时间 
+        /// </summary>
+        DateTime StartTime { get; }
+
+        /// <summary>
+        /// 接收有效数据的时间
+        /// </summary>
+        DateTime LastActiveTime { get; set; }
+
         #endregion
     }
 }

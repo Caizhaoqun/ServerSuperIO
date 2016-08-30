@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -48,22 +49,35 @@ namespace ServerSuperIO.Communicate.NET
         /// <param name="data"></param>
         public void Send(IRunDevice dev, byte[] data)
         {
+            if (data == null || data.Length <= 0)
+            {
+                this.Server.Logger.Info(false, dev.DeviceParameter.DeviceName + ">>要发送的数据为空");
+                return;
+            }
+
             int counter = this.Server.DeviceManager.GetCounter(dev.DeviceParameter.DeviceID);
 
-            ISocketSession socketSession =(ISocketSession)this.Server.ChannelManager.GetChannel(dev.DeviceParameter.NET.RemoteIP, CommunicateType.NET);
+            ISocketSession socketSession = (ISocketSession)this.Server.ChannelManager.GetChannel(dev.DeviceParameter.NET.RemoteIP, CommunicateType.NET);
 
             if (socketSession != null)
             {
                 int sendNum = 0;
                 lock (socketSession.SyncLock)
                 {
-                    sendNum = socketSession.Write(data);
+                    try
+                    {
+                        sendNum = dev.Send(socketSession, data);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Server.Logger.Info(true, dev.DeviceParameter.DeviceName + ">>"+ex.Message);
+                    }
                 }
-                
+
                 if (sendNum == data.Length && sendNum != 0)
                 {
                     Interlocked.Increment(ref counter);
-                    this.Server.Logger.Info(false, dev.DeviceParameter.DeviceName+">>发送请求数据");
+                    this.Server.Logger.Info(false, dev.DeviceParameter.DeviceName + ">>发送请求数据");
                 }
                 else
                 {
@@ -72,6 +86,8 @@ namespace ServerSuperIO.Communicate.NET
                 }
 
                 dev.ShowMonitorData(data, "发送");
+
+                dev.SaveBytes(data, "发送");
 
                 if (counter >= 3)
                 {
@@ -106,94 +122,141 @@ namespace ServerSuperIO.Communicate.NET
         /// 接收数据
         /// </summary>
         /// <param name="socketSession"></param>
-        /// <param name="data"></param>
-        public void Receive(ISocketSession socketSession, byte[] data)
+        /// <param name="dataPackage"></param>
+        public void Receive(ISocketSession socketSession, IReceivePackage dataPackage)
         {
-            if (this.Server.Config.ControlMode == ControlMode.Loop
-                || this.Server.Config.ControlMode == ControlMode.Self
-                || this.Server.Config.ControlMode == ControlMode.Parallel)
+            if (dataPackage.ListBytes == null || dataPackage.ListBytes.Count <= 0)
             {
-                #region
-                IRunDevice[] list = this.Server.DeviceManager.GetDevices(socketSession.RemoteIP, CommunicateType.NET);
+                return;
+            }
 
-                if (list == null || list.Length <= 0)
-                    return;
+            IRunDevice[] list = this.Server.DeviceManager.GetDevices(CommunicateType.NET);
+            if (list != null && list.Length > 0)
+            {
+                if (this.Server.ServerConfig.ControlMode == ControlMode.Loop
+                    || this.Server.ServerConfig.ControlMode == ControlMode.Self
+                    || this.Server.ServerConfig.ControlMode == ControlMode.Parallel)
+                {
+                    #region
+                    IRunDevice dev = GetDeliveryDevice(list, dataPackage);
+                    if (dev != null)
+                    {
+                        lock (dev.SyncLock)
+                        {
+                            foreach (byte[] data in dataPackage.ListBytes)
+                            {
+                                #region
+                                try
+                                {
+                                    if (data == null)
+                                    {
+                                        dev.Run(socketSession.Key, socketSession.Channel, new byte[] { });
+                                    }
+                                    else
+                                    {
+                                        dev.Run(socketSession.Key, socketSession.Channel, data);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Server.Logger.Error(true, "", ex);
+                                }
 
-                int counter = 0;
+                                int counter = this.Server.DeviceManager.GetCounter(dev.DeviceParameter.DeviceID);
+                                Interlocked.Decrement(ref counter);
+                                if (counter < 0)
+                                {
+                                    Interlocked.Exchange(ref counter, 0);
+                                }
+                                this.Server.DeviceManager.SetCounter(dev.DeviceParameter.DeviceID, counter);
+                                #endregion
+                            }
+                        }
+                    }
+                    #endregion
+                }
+                else if (this.Server.ServerConfig.ControlMode == ControlMode.Singleton)
+                {
+                    #region
+                    try
+                    {
+                        lock (list[0].SyncLock)
+                        {
+                            foreach (byte[] data in dataPackage.ListBytes)
+                            {
+                                list[0].Run(socketSession.Key, (IChannel)socketSession, data);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Server.Logger.Error(true, "", ex);
+                    }
+                    #endregion
+                }
+            }
+        }
+
+        private IRunDevice GetDeliveryDevice(IRunDevice[] devList, IReceivePackage dataPackage)
+        {
+            IRunDevice devRun = null;
+            foreach (IRunDevice dev in devList)
+            {
                 bool isDelivery = false;
-                foreach (IRunDevice dev in list)
+                if (this.Server.ServerConfig.DeliveryMode == DeliveryMode.DeviceIP)
                 {
-                    
-                    if (this.Server.Config.DeliveryMode == DeliveryMode.DeviceIP)
+                    #region
+                    isDelivery = String.CompareOrdinal(dev.DeviceParameter.NET.RemoteIP, dataPackage.RemoteIP) == 0 ? true : false;
+                    #endregion
+                }
+                else if (this.Server.ServerConfig.DeliveryMode == DeliveryMode.DeviceCode)
+                {
+                    #region
+                    if (String.IsNullOrEmpty(dataPackage.DeviceCode))
                     {
-                        isDelivery = String.CompareOrdinal(dev.DeviceParameter.NET.RemoteIP, socketSession.RemoteIP) == 0 ? true : false;
-                    }
-                    else if (this.Server.Config.DeliveryMode == DeliveryMode.DeviceAddress)
-                    {
-                        if (dev.Protocol != null
-                                && dev.Protocol.CheckData(data)
-                                && dev.Protocol.GetAddress(data) == dev.DeviceParameter.DeviceAddr)
+                        foreach (byte[] data in dataPackage.ListBytes)
                         {
-                            isDelivery = true;
-                        }
-                        else
-                        {
-                            isDelivery = false;
-                        }
-                    }
-
-                    if (isDelivery)
-                    {
-                        dev.ShowMonitorData(data, "接收");
-
-                        try
-                        {
-                            if (this.Server.Config.SocketMode == SocketMode.Tcp)
+                            if (data != null)
                             {
-                                dev.Run(socketSession.Key, null, data);
+                                if (dev.Protocol != null
+                                    && dev.Protocol.CheckData(data)
+                                    &&
+                                    String.CompareOrdinal(dev.Protocol.GetCode(data),
+                                        dev.DeviceParameter.DeviceCode) == 0)
+                                {
+                                    isDelivery = true;
+                                }
+                                else
+                                {
+                                    isDelivery = false;
+                                }
                             }
-                            else if (this.Server.Config.SocketMode == SocketMode.Udp)
+                            else
                             {
-                                dev.Run(socketSession.Key, socketSession.Channel, data);
+                                isDelivery = false;
+                            }
+
+                            if (isDelivery)
+                            {
+                                break;
                             }
                         }
-                        catch (Exception ex)
-                        {
-                            Server.Logger.Error(true, "", ex);
-                        }
-
-                        counter = this.Server.DeviceManager.GetCounter(dev.DeviceParameter.DeviceID);
-
-                        Interlocked.Decrement(ref counter);
-
-                        if (counter < 0)
-                        {
-                            Interlocked.Exchange(ref counter, 0);
-                        }
-
-                        this.Server.DeviceManager.SetCounter(dev.DeviceParameter.DeviceID, counter);
-
-                        break;
                     }
+                    else
+                    {
+                        isDelivery = String.CompareOrdinal(dev.DeviceParameter.DeviceCode, dataPackage.DeviceCode) == 0 ? true : false;
+                    }
+
+                    #endregion
                 }
-                #endregion
-            }
-            else if (this.Server.Config.ControlMode == ControlMode.Singleton)
-            {
-                #region
-                IRunDevice[] list = this.Server.DeviceManager.GetDevices(CommunicateType.NET);
-                if (list == null || list.Length <= 0)
-                    return;
-                try
+
+                if (isDelivery)
                 {
-                    list[0].Run(socketSession.Key, (IChannel)socketSession, data);
+                    devRun = dev;
+                    break;
                 }
-                catch (Exception ex)
-                {
-                    Server.Logger.Error(true, "", ex);
-                }
-                #endregion
             }
+            return devRun;
         }
 
         /// <summary>
@@ -305,7 +368,7 @@ namespace ServerSuperIO.Communicate.NET
                     System.Threading.Thread.Sleep(1000);
                     continue;
                 }
-                ControlMode mode = Server.Config.ControlMode;
+                ControlMode mode = Server.ServerConfig.ControlMode;
                 if (mode == ControlMode.Singleton)
                 {
                     System.Threading.Thread.Sleep(100); //不进行调度
@@ -391,7 +454,7 @@ namespace ServerSuperIO.Communicate.NET
             ISocketSession io = null;
             try
             {
-                io =(ISocketSession)this.Server.ChannelManager.GetChannel(dev.DeviceParameter.NET.RemoteIP, CommunicateType.NET);
+                io = (ISocketSession)this.Server.ChannelManager.GetChannel(dev.DeviceParameter.NET.RemoteIP, CommunicateType.NET);
                 if (io != null)
                 {
                     dev.Run(io);
@@ -399,7 +462,7 @@ namespace ServerSuperIO.Communicate.NET
                 else
                 {
                     dev.Run((IChannel)null);   //如果没有找到连接，则传递空值
-                    //没有找到可用的设备，加延时，局免循环过快。
+                                               //没有找到可用的设备，加延时，局免循环过快。
                     System.Threading.Thread.Sleep(1000);
                 }
             }

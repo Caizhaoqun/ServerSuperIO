@@ -1,8 +1,8 @@
 using ServerSuperIO.Common;
 
-namespace ServerSuperIO.CommandCache
+namespace ServerSuperIO.DataCache
 {
-    public enum CommandPriority
+    public enum Priority
     {
         [EnumDescription("Õý³£·¢ËÍ")]
         Normal = 0x00,

@@ -8,11 +8,9 @@ namespace ServerSuperIO.Communicate.NET
 {
     public interface ISocketAsyncEventArgsProxy
     {
-        SocketAsyncEventArgs SocketReceiveEventArgs { get; set; }
+        SocketAsyncEventArgsEx SocketReceiveEventArgsEx { get; set; }
 
         SocketAsyncEventArgs SocketSendEventArgs { get; set; }
-
-        int ReceiveOffset { get; }
 
         void Initialize(ISocketSession session);
 

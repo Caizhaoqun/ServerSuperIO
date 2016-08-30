@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using ServerSuperIO.Common;
+using ServerSuperIO.Protocol;
 using ServerSuperIO.Server;
 
 namespace ServerSuperIO.Communicate.NET
@@ -110,9 +111,24 @@ namespace ServerSuperIO.Communicate.NET
             e.Dispose();
         }
 
-        public override byte[] Read()
+        //public override byte[] Read()
+        //{
+        //    return new byte[]{};
+        //}
+
+        /// <summary>
+        /// 读IO，带过滤器
+        /// </summary>
+        /// <param name="receiveFilter"></param>
+        /// <returns></returns>
+        //public override IList<byte[]> Read(IReceiveFilter receiveFilter)
+        //{
+        //    return new List<byte[]>();
+        //}
+
+        protected override IList<byte[]> ReceiveDataFilter(IReceiveFilter receiveFilter)
         {
-            return new byte[]{};
+            return new List<byte[]>();
         }
 
         public override int Write(byte[] data)

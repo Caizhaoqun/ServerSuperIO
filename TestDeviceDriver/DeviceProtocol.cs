@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using ServerSuperIO.Common;
 using ServerSuperIO.Device;
 using ServerSuperIO.Protocol;
 
@@ -35,12 +36,12 @@ namespace TestDeviceDriver
             return data[2];
         }
 
-        public override byte[] GetProHead(byte[] data)
+        public override byte[] GetHead(byte[] data)
         {
             return new byte[] { data[0], data[1] };
         }
 
-        public override byte[] GetProEnd(byte[] data)
+        public override byte[] GetEnd(byte[] data)
         {
             return new byte[] { data[data.Length - 1] };
         }
@@ -53,6 +54,25 @@ namespace TestDeviceDriver
                 checkSum += data[i];
             }
             return new byte[] { checkSum };
+        }
+
+        public override string GetCode(byte[] data)
+        {
+            byte[] head = new byte[] {0x55, 0xaa};
+            int codeIndex = data.Mark(0, data.Length, head);
+            if (codeIndex == -1)
+            {
+                return String.Empty;
+            }
+            else
+            {
+                return data[codeIndex + head.Length].ToString("00#");
+            }
+        }
+
+        public override int GetPackageLength(byte[] data)
+        {
+            throw new NotImplementedException();
         }
     }
 }

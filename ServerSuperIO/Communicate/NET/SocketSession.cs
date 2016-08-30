@@ -5,11 +5,12 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using ServerSuperIO.Common;
+using ServerSuperIO.Protocol;
 using ServerSuperIO.Server;
 
 namespace ServerSuperIO.Communicate.NET
 {
-    public abstract class SocketSession : ServerProvider,ISocketSession
+    public abstract class SocketSession : BaseChannel,ISocketSession
     {
         private bool _IsDisposed = false;
         protected SocketSession(Socket socket, IPEndPoint remoteEndPoint, ISocketAsyncEventArgsProxy proxy)
@@ -25,6 +26,9 @@ namespace ServerSuperIO.Communicate.NET
             RemoteEndPoint = remoteEndPoint;
             Client = socket;
             SocketAsyncProxy = proxy;
+
+            StartTime=DateTime.Now;
+            LastActiveTime = StartTime;
         }
 
         ~SocketSession()
@@ -32,10 +36,10 @@ namespace ServerSuperIO.Communicate.NET
             Dispose(false);
         }
 
-        /// <summary>
-        /// 同步对象
-        /// </summary>
-        private object _SyncLock = new object();
+        ///// <summary>
+        ///// 同步对象
+        ///// </summary>
+        //private object _SyncLock = new object();
 
         /// <summary>
         /// 远程IP
@@ -58,6 +62,16 @@ namespace ServerSuperIO.Communicate.NET
         public IPEndPoint RemoteEndPoint { get; private set; }
 
         /// <summary>
+        /// 开始时间 
+        /// </summary>
+        public DateTime StartTime { get; private set; }
+
+        /// <summary>
+        /// 最后接收有效数据的时间。
+        /// </summary>
+        public DateTime LastActiveTime { get; set; }
+
+        /// <summary>
         /// 代理实例
         /// </summary>
         public ISocketAsyncEventArgsProxy SocketAsyncProxy { get; private set; }
@@ -74,11 +88,11 @@ namespace ServerSuperIO.Communicate.NET
 
         public event SocketReceiveDataHandler SocketReceiveData;
 
-        protected virtual void OnSocketReceiveData(byte[] data)
+        protected virtual void OnSocketReceiveData(IReceivePackage dataPackage)
         {
             if (SocketReceiveData != null)
             {
-                SocketReceiveData(this, this, data);
+                SocketReceiveData(this, this, dataPackage);
             }
         }
 
@@ -109,7 +123,7 @@ namespace ServerSuperIO.Communicate.NET
         /// <summary>
         /// 初始化
         /// </summary>
-        public abstract void Initialize();
+        //public abstract void Initialize();
 
         /// <summary>
         /// 事件完成接口
@@ -118,16 +132,16 @@ namespace ServerSuperIO.Communicate.NET
         /// <param name="e"></param>
         protected abstract void SocketEventArgs_Completed(object sender, SocketAsyncEventArgs e);
 
-        public object SyncLock
-        {
-            get { return _SyncLock; }
-        }
+        //public object SyncLock
+        //{
+        //    get { return _SyncLock; }
+        //}
 
 
         /// <summary>
         /// 关键字
         /// </summary>
-        public string Key
+        public override string Key
         {
             get { return this.RemoteIP; }
         }
@@ -135,31 +149,33 @@ namespace ServerSuperIO.Communicate.NET
         /// <summary>
         /// 唯一ID
         /// </summary>
-        public string SessionID { get; private set; }
+        public override string SessionID { get; protected set; }
 
         /// <summary>
         /// 通道实例
         /// </summary>
-        public IChannel Channel
+        public override IChannel Channel
         {
             get { return (IChannel)this; }
         }
 
-        public abstract byte[] Read();
+        //public abstract byte[] Read();
 
-        public abstract int Write(byte[] data);
+        //public abstract IList<byte[]> Read(IReceiveFilter receiveFilter);
 
-        public void Close()
+        //public abstract int Write(byte[] data);
+
+        public override void Close()
         {
             Dispose(true);
         }
 
-        public CommunicateType CommunicationType
+        public override CommunicateType CommunicationType
         {
             get { return CommunicateType.NET; }
         }
 
-        public bool IsDisposed
+        public override bool IsDisposed
         {
             get { return _IsDisposed; }
         }
@@ -167,7 +183,7 @@ namespace ServerSuperIO.Communicate.NET
         /// <summary>
         /// 释放资源
         /// </summary>
-        public virtual void Dispose()
+        public override void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);

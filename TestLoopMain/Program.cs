@@ -20,35 +20,36 @@ namespace TestLoopMain
     {
         static void Main(string[] args)
         {
-            DeviceDriver dev1=new DeviceDriver();
-            dev1.DeviceParameter.DeviceName = "设备1";
-            dev1.DeviceParameter.DeviceAddr = 0;
-            dev1.DeviceParameter.DeviceID = 0;
-            dev1.DeviceDynamic.DeviceID = 0;
-            dev1.DeviceParameter.COM.Port = 1;
-            dev1.DeviceParameter.COM.Baud = 9600;
-            dev1.CommunicateType=CommunicateType.COM;
-            dev1.Initialize(0);
+            //DeviceDriver dev1 = new DeviceDriver();
+            //dev1.DeviceParameter.DeviceName = "设备1";
+            //dev1.DeviceParameter.DeviceAddr = 0;
+            //dev1.DeviceParameter.DeviceID = 0;
+            //dev1.DeviceDynamic.DeviceID = 0;
+            //dev1.DeviceParameter.COM.Port = 1;
+            //dev1.DeviceParameter.COM.Baud = 9600;
+            //dev1.CommunicateType = CommunicateType.COM;
+            //dev1.Initialize(0);
 
-            DeviceDriver dev2 = new DeviceDriver();
-            dev2.DeviceParameter.DeviceName = "设备2";
-            dev2.DeviceParameter.DeviceAddr = 0;
-            dev2.DeviceParameter.DeviceID = 1;
-            dev2.DeviceDynamic.DeviceID = 1;
-            dev2.DeviceParameter.COM.Port = 3;
-            dev2.DeviceParameter.COM.Baud = 9600;
-            dev2.CommunicateType = CommunicateType.COM;
-            dev2.Initialize(1);
+            //DeviceDriver dev2 = new DeviceDriver();
+            //dev2.DeviceParameter.DeviceName = "设备2";
+            //dev2.DeviceParameter.DeviceAddr = 0;
+            //dev2.DeviceParameter.DeviceID = 1;
+            //dev2.DeviceDynamic.DeviceID = 1;
+            //dev2.DeviceParameter.COM.Port = 3;
+            //dev2.DeviceParameter.COM.Baud = 9600;
+            //dev2.CommunicateType = CommunicateType.COM;
+            //dev2.Initialize(1);
 
-            DeviceDriver dev3 = new DeviceDriver();
-            dev3.DeviceParameter.DeviceName = "设备3";
-            dev3.DeviceParameter.DeviceAddr = 0;
-            dev3.DeviceParameter.DeviceID = 2;
-            dev3.DeviceDynamic.DeviceID = 2;
-            dev3.DeviceParameter.NET.RemoteIP  = "127.0.0.1";
-            dev3.DeviceParameter.NET.RemotePort = 9600;
-            dev3.CommunicateType = CommunicateType.NET;
-            dev3.Initialize(2);
+            //DeviceDriver dev3 = new DeviceDriver();
+            //dev3.DeviceParameter.DeviceName = "设备3";
+            //dev3.DeviceParameter.DeviceAddr = 0;
+            //dev3.DeviceParameter.DeviceID = 2;
+            //dev3.DeviceDynamic.DeviceID = 2;
+            //dev3.DeviceParameter.NET.RemoteIP = "127.0.0.1";
+            //dev3.DeviceParameter.NET.RemotePort = 9600;
+            //dev3.CommunicateType = CommunicateType.NET;
+            //dev3.DeviceParameter.NET.WorkMode = WorkMode.TcpClient;
+            //dev3.Initialize(2);
 
             DeviceDriver dev4 = new DeviceDriver();
             dev4.DeviceParameter.DeviceName = "设备4";
@@ -60,10 +61,13 @@ namespace TestLoopMain
             dev4.CommunicateType = CommunicateType.NET;
             dev4.Initialize(3);
 
-            Server server=new Server("服务1",new Config()
+            IServer server = new ServerFactory().CreateServer(new ServerConfig()
             {
-                SocketMode = SocketMode.Udp,
-                ControlMode = ControlMode.Loop
+                ServerName = "服务1",
+                SocketMode = SocketMode.Tcp,
+                ControlMode = ControlMode.Loop,
+                CheckSameSocketSession = false,
+                NetReceiveBufferSize = 20,
             });
 
             server.AddDeviceCompleted += server_AddDeviceCompleted;
@@ -72,10 +76,10 @@ namespace TestLoopMain
             server.SocketClosed+=server_SocketClosed;
             server.Start();
 
-            server.AddDevice(dev1);
-            server.AddDevice(dev2);
-            //server.RemoveDevice(0); //删除设备 
-            server.AddDevice(dev3);
+            //server.AddDevice(dev1);
+            //server.AddDevice(dev2);
+            ////server.RemoveDevice(0); //删除设备 
+            //server.AddDevice(dev3);
             server.AddDevice(dev4);
             //server.RemoveDevice(3);//删除设备 
 
@@ -92,13 +96,13 @@ namespace TestLoopMain
             //dev1.DeviceParameter.COM.Port = newport;
             //dev1.DeviceParameter.COM.Baud = newbaud;
 
-            Service s = new Service();
-            s.AppServiceLog+=s_AppServiceLog;
-            server.AddAppService((IAppService)s);
+            //Service s = new Service();
+            //s.AppServiceLog+=s_AppServiceLog;
+            //server.AddAppService((IAppService)s);
             
 
-            Graphics g = new Graphics();
-            server.AddGraphicsShow((IGraphicsShow)g);  
+            //Graphics g = new Graphics();
+            //server.AddGraphicsShow((IGraphicsShow)g);  
 
             while ("exit"==Console.ReadLine())
             {

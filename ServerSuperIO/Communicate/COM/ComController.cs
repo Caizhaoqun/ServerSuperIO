@@ -62,7 +62,7 @@ namespace ServerSuperIO.Communicate.COM
         /// </summary>
         public string Key
         {
-            get { return Utils.PortToString(_Com.Port); }
+            get { return ComUtils.PortToString(_Com.Port); }
         }
 
         /// <summary>
