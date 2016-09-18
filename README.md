@@ -1,3 +1,5 @@
+#备注：最新源代地址>>https://github.com/wxzz/ServerSuperIO-v2
+
 # ServerSuperIO
 
 #SSIO的特点
